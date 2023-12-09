@@ -1,0 +1,3 @@
+DEVELOPER = "Discord: qxh"
+VERSION = "v2.0"
+SERVER_PORT = 27900
