@@ -19,7 +19,7 @@ class ServerConnector(Plugin):
     @on(ScriptEvent.CALLBACK)
     def run(self) -> None:
         auth_token: Exception | str = UnproxiedConnectAuth.verify(",-")
-        ...  # TODO: send CONNECT_REQUEST_3
+        _ = auth_token  # TODO: send CONNECT_REQUEST_3
 
 
 def setup(app: App) -> None:

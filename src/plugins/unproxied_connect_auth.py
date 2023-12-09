@@ -13,7 +13,7 @@ class UnproxiedConnectAuth(Plugin):
         )
 
     @staticmethod
-    def verify(client_auth_ticket: str) -> Exception | str:
+    def verify(client_auth_ticket: str | None = ",-") -> Exception | str:
         """Authorize the client's connection to the server.
         Do not spam this or you'll get a 500.
         This will return a base64-encoded string acting as a ticket
