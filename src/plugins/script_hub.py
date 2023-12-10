@@ -23,12 +23,13 @@ class ScriptHub(Plugin):
                 logging.error(
                     f"Plugin {plugin_name} does not exist. Are you entering the ID and name correctly?"
                 )
+            return
+
+        success, err = uninstall_plugin(plugin_name)
+        if success:
+            logging.info(f"Successfully uninstalled {plugin_name}")
         else:
-            success, err = uninstall_plugin(plugin_name)
-            if success:
-                logging.info(f"Successfully uninstalled {plugin_name}")
-            else:
-                logging.error(err)
+            logging.error(err)
 
 
 def setup(app: App) -> None:

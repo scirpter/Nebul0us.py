@@ -10,8 +10,8 @@ class Gowire:
         self.sock = socket(AF_INET, SOCK_DGRAM)
         self.sock.bind(("", WIRE_PORT))
 
-    def send_command(self, command: str) -> None:
-        self.sock.sendto(command.encode(), ("localhost", TARGET_WIRE_PORT))
+    def verify(self, data: str) -> None:
+        self.sock.sendto(f"VERIFY({data})".encode(), ("localhost", TARGET_WIRE_PORT))
 
     def recv(self) -> str:
         return self.sock.recv(1024).decode()

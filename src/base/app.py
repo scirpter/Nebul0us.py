@@ -34,7 +34,6 @@ class App:
                         func(*args_no_prefix)
 
     def register_plugins(self) -> App:
-        logging.info("Registering plugins...")
         for path in Path("src/plugins").iterdir():
             if not path.name.endswith(".py") and path.name.startswith("_"):
                 continue
@@ -43,4 +42,6 @@ class App:
                 _setup: Callable[..., Any] | Any = getattr(module, "setup", None)
                 if callable(_setup):
                     _setup(self)
+
+        logging.info("Successfully registered plugins")
         return self

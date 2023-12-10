@@ -119,5 +119,13 @@ class PluginRegistry:
         self.plugins: list[Plugin] = []
 
     def register(self, plugin: Plugin) -> None:
-        # list all plugin functions
+        if plugin in self.plugins:
+            return
+
         self.plugins.append(plugin)
+
+    def unregister(self, plugin: Plugin) -> None:
+        if plugin not in self.plugins:
+            return
+
+        self.plugins.remove(plugin)
