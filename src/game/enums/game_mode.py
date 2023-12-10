@@ -39,8 +39,11 @@ class GameMode(Enum):
         DASH,  # NOTE: renamed from "X18"
         X19,
         CRAZY_SPLIT,
+        INVALID,  # case: Failed to convert gameMode to String
         BATTLE_ROYALE,
         X20,
         X21,
         MEGA_SPLIT,
-    ) = range(40)
+        CAMPAIGN_2,
+        X22,
+    ) = range(43)

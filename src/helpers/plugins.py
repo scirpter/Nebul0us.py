@@ -1,16 +1,51 @@
 from __future__ import annotations
+import logging
 from typing import Any, Callable
 from enum import Enum, auto
+from requests import Response, get
+from pathlib import Path
+
+
+PLUGIN_CHANNEL_ID = 1179542458749685770
 
 
 def on(s: ScriptEvent) -> Callable[..., Any]:
     def decorator(fun: Callable[..., Any]) -> Callable[..., Any]:
-        if not fun.events:  # type: ignore
+        if fun.__code__.co_argcount != len(fun.__annotations__):
+            logging.warning(
+                f"Plugin callback {fun.__qualname__} could not be registered: please use type hints"
+            )
+            return fun
+
+        if not hasattr(fun, "events"):
             fun.events: list[ScriptEvent] = []  # type: ignore
         fun.events.append(s)  # type: ignore
+        logging.info(f"Registered {fun.__qualname__} for {s.name}")
         return fun
 
     return decorator
+
+
+def install_plugin(plugin_name: str, msg_id: int) -> int:
+    """Returns the response code of the request"""
+    response: Response = get(
+        f"https://cdn.discordapp.com/attachments/{PLUGIN_CHANNEL_ID}/{msg_id}/{plugin_name}.py"
+    )
+    if response.status_code != 200:
+        return response.status_code
+
+    with open(f"src/plugins/{plugin_name}.py", "w") as f:
+        f.write(response.text)
+
+    return response.status_code
+
+
+def uninstall_plugin(plugin_name: str) -> tuple[bool, Exception | None]:
+    try:
+        Path(f"src/plugins/{plugin_name}.py").unlink()
+        return (True, None)
+    except FileNotFoundError:
+        return (False, FileNotFoundError(f"Plugin {plugin_name} is not installed"))
 
 
 class ScriptEvent(Enum):

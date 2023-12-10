@@ -1,5 +1,10 @@
 from game.enums import GameMode, WorldSize, Difficulty, SplitMultiplier
-from game.models import Ejection, Player, Dot, Item, Spell, Hole
+from game.models.dot import Dot
+from game.models.ejection import Ejection
+from game.models.hole import Hole
+from game.models.item import Item
+from game.models.player import Player
+from game.models.spell import Spell
 
 
 class World:

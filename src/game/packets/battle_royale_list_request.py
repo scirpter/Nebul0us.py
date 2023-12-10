@@ -1,7 +1,7 @@
-from base.event_handler import ScriptEvent
+from helpers.plugins import ScriptEvent
 from enums.packet_type import PacketType
 from helpers.java_data_stream import JavaDataOutputStream
-from models.client import Client
+from game.models.client.client import Client
 from packets.packet import Packet
 
 

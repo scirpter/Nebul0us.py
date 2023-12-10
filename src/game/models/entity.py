@@ -3,4 +3,4 @@ class WorldEntity:
         self,
         relative_entity_id: int,
     ) -> None:
-        self.relative_entity_id = relative_entity_id
+        self.relative_entity_id: int = relative_entity_id

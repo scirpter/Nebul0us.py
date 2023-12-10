@@ -1,6 +1,6 @@
 import math
-from models.blob import Blob
-from models.entity import WorldEntity
+from game.models.blob import Blob
+from game.models.entity import WorldEntity
 
 
 class Player(WorldEntity):

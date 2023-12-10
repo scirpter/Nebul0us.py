@@ -1,4 +1,4 @@
-from models.entity import WorldEntity
+from game.models.entity import WorldEntity
 
 
 class Ejection(WorldEntity):

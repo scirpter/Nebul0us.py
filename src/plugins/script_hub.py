@@ -1,9 +1,6 @@
 from base.app import App
-from helpers.plugins import Plugin, on, ScriptEvent
-from requests import Response, get
-
-
-CHANNEL_ID = 1179542458749685770
+from helpers.plugins import Plugin, install_plugin, on, ScriptEvent, uninstall_plugin
+import logging
 
 
 class ScriptHub(Plugin):
@@ -19,15 +16,19 @@ class ScriptHub(Plugin):
     @on(ScriptEvent.CALLBACK)
     def run(self, msg_id: int, plugin_name: str, uninstall: str = "n") -> None:
         if uninstall == "n":
-            response: Response = get(
-                f"https://cdn.discordapp.com/attachments/{CHANNEL_ID}/{msg_id}/{plugin_name}.py"
-            )
-            if response.status_code != 200:
-                print(f"Failed to download plugin {plugin_name}")
-                return
-
-            with open(f"src/plugins/{plugin_name}.py", "w") as f:
-                f.write(response.text)
+            code: int = install_plugin(plugin_name, msg_id)
+            if code == 200:
+                logging.info(f"Successfully installed {plugin_name}")
+            else:
+                logging.error(
+                    f"Plugin {plugin_name} does not exist. Are you entering the ID and name correctly?"
+                )
+        else:
+            success, err = uninstall_plugin(plugin_name)
+            if success:
+                logging.info(f"Successfully uninstalled {plugin_name}")
+            else:
+                logging.error(err)
 
 
 def setup(app: App) -> None:

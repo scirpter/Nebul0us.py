@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from game.models.client import Wardrobe, ControlData, ServerData
+from game.models.client.server_data import ServerData
+from game.models.client.wardrobe import Wardrobe
+from game.models.client.control_data import ControlData
 
 
 if TYPE_CHECKING:

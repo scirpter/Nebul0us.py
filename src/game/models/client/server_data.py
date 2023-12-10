@@ -1,5 +1,5 @@
 from game.enums import ProfileVisibility
-from game.models import World
+from game.models.world import World
 
 
 class ServerData:
@@ -18,7 +18,7 @@ class ServerData:
     @property
     def cr2_token1(self) -> int:
         """Server-side client identification token (1).
-        Received from CONNECT_RESULT_2 packet"""
+        Received from CONNECT_RESULT_2"""
         return self.__cr2_token1
 
     @cr2_token1.setter
@@ -27,7 +27,8 @@ class ServerData:
 
     @property
     def cr2_token2(self) -> int:
-        """Server-side client identification token (2)"""
+        """Server-side client identification token (2).
+        Received from CONNECT_RESULT_2"""
         return self.__cr2_token2
 
     @cr2_token2.setter

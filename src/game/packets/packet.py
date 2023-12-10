@@ -1,5 +1,5 @@
 from enums.packet_type import PacketType
-from models.client import Client
+from game.models.client.client import Client
 
 
 class Packet:
