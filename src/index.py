@@ -7,7 +7,7 @@ from helpers.plugins import ScriptEvent
 
 
 def main() -> None:
-    app.dispatch(ScriptEvent.CALLBACK, "install", 90, "server_connector")
+    app.dispatch(ScriptEvent.CALLBACK, "install", 90)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 from base.gowire import Gowire
 from helpers.plugins import PluginRegistry, ScriptEvent
 from game.models.client.client import Client
@@ -29,8 +29,46 @@ class App:
                 for _name, func in inspect.getmembers(
                     plugin, predicate=inspect.ismethod
                 ):
-                    if hasattr(func, "events") and t in func.events:  # type: ignore
+                    if hasattr(func, "event") and func.event == t:  # type: ignore
                         args_no_prefix: list[Any] = list(args[1:])
+
+                        annotations: dict[str, Any] = func.__annotations__
+                        if "return" in annotations:
+                            annotations.pop("return")
+
+                        optional_ct: int = 0
+                        for _, arg_type in annotations.copy().items():
+                            if arg_type == Optional[arg_type]:
+                                optional_ct += 1
+
+                        # check if the number of arguments is correct
+                        if len(annotations) - optional_ct > len(args_no_prefix):
+                            logging.error(
+                                f"Not enough arguments were passed. Expected {len(annotations)-optional_ct}{f'-{len(annotations)}' if optional_ct else ''} but got {len(args_no_prefix)}. Here's how to use the command properly: {plugin_prefix} {plugin.usage}"
+                            )
+                            continue
+
+                        # too many arguments in args_no_prefix
+                        elif len(annotations) < len(args_no_prefix):
+                            logging.error(
+                                f"Too many arguments were passed. Expected {len(annotations)-optional_ct}{f'-{len(annotations)}' if optional_ct else ''} but got {len(args_no_prefix)}. Here's how to use the command properly: {plugin_prefix} {plugin.usage}"
+                            )
+                            continue
+
+                        # enforce proper types
+                        for i, arg in enumerate(args_no_prefix):
+                            if not isinstance(arg, list(annotations.values())[i]):
+                                # try forcing the type
+                                try:
+                                    args_no_prefix[i] = list(annotations.values())[i](
+                                        arg
+                                    )
+                                except Exception:
+                                    logging.error(
+                                        f"Argument {i} is not of type {list(annotations.values())[i].__name__}."
+                                    )
+                                continue
+
                         func(*args_no_prefix)
 
     def register_plugins(self) -> App:

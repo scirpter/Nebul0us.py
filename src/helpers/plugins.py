@@ -11,16 +11,22 @@ PLUGIN_CHANNEL_ID = 1179542458749685770
 
 def on(s: ScriptEvent) -> Callable[..., Any]:
     def decorator(fun: Callable[..., Any]) -> Callable[..., Any]:
-        if fun.__code__.co_argcount != len(fun.__annotations__):
+        annotations: dict[str, Any] = fun.__annotations__
+        if "return" in annotations:
+            annotations.pop("return")
+        if fun.__code__.co_argcount < len(annotations):
             logging.warning(
-                f"Plugin callback {fun.__qualname__} could not be registered: please use type hints"
+                f"Plugin callback {fun.__qualname__} could not be registered: please use parameter type hints (return type is optional)"
             )
             return fun
 
-        if not hasattr(fun, "events"):
-            fun.events: list[ScriptEvent] = []  # type: ignore
-        fun.events.append(s)  # type: ignore
-        logging.info(f"Registered {fun.__qualname__} for {s.name}")
+        if not hasattr(fun, "event"):
+            fun.event: ScriptEvent = s  # type: ignore
+            logging.info(f"Registered {fun.__qualname__} for {s.name}")
+        else:
+            logging.warning(
+                f"Plugin {fun.__qualname__} could not be registered as {s.name}: already registered as {fun.event.name}"  # type: ignore
+            )
         return fun
 
     return decorator
@@ -63,6 +69,16 @@ class Dependency:
         self.msg_id: int = msg_id
 
 
+class OptionalArg:
+    def __init__(self, arg: str) -> None:
+        self.arg: Any = arg
+
+
+class RequiredArg:
+    def __init__(self, arg: str) -> None:
+        self.arg: Any = arg
+
+
 class Plugin:
     __instance: Plugin | None = None
 
@@ -73,14 +89,14 @@ class Plugin:
         description: str,
         author: str,
         prefixes: list[str] | None = None,
-        arguments: list[str] | None = None,
+        arguments: list[RequiredArg | OptionalArg] | None = None,
         dependencies: list[Dependency] | None = None,
     ) -> None:
         self.name: str = name
         self.description: str = description
         self.author: str = author
         self.prefixes: list[str] = prefixes or []
-        self.arguments: list[str] = arguments or []
+        self.arguments: list[RequiredArg | OptionalArg] = arguments or []
         self.dependencies: list[Dependency] = dependencies or []
         self.__dependency_locked: bool = True
         self.__instance: Plugin | None = self
@@ -101,7 +117,12 @@ class Plugin:
     @property
     def usage(self) -> str:
         """Help the user understand how to use the plugin properly"""
-        return " OR ".join(self.prefixes) + " " + " ".join(self.arguments)
+        return " ".join(
+            [
+                f"<{arg.arg}>" if isinstance(arg, RequiredArg) else f"({arg.arg})"
+                for arg in self.arguments
+            ]
+        )
 
     @property
     def dependency_locked(self) -> bool:
