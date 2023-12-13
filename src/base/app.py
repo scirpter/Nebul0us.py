@@ -56,18 +56,19 @@ class App:
                             continue
 
                         # enforce proper types
-                        for i, arg in enumerate(args_no_prefix):
-                            if not isinstance(arg, list(annotations.values())[i]):
+                        for i, arg_type in enumerate(args_no_prefix):
+                            # arg_name: str = list(annotations.keys())[i]
+                            # arg_usage: str = plugin.arguments[i].arg
+                            required_type: Any = list(annotations.values())[i]
+                            if not isinstance(arg_type, required_type):
                                 # try forcing the type
                                 try:
-                                    args_no_prefix[i] = list(annotations.values())[i](
-                                        arg
-                                    )
+                                    args_no_prefix[i] = required_type(arg_type)
                                 except Exception:
                                     logging.error(
-                                        f"Argument {i} is not of type {list(annotations.values())[i].__name__}."
+                                        f"Argument {i+1} is not of type {required_type}. Here's how to use the command properly: {plugin_prefix} {plugin.usage}"
                                     )
-                                continue
+                                    return
 
                         func(*args_no_prefix)
 
