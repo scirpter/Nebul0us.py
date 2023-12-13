@@ -71,12 +71,12 @@ class Dependency:
 
 class OptionalArg:
     def __init__(self, arg: str) -> None:
-        self.arg: Any = arg
+        self.arg: str = f"({arg})"
 
 
 class RequiredArg:
     def __init__(self, arg: str) -> None:
-        self.arg: Any = arg
+        self.arg: str = f"<{arg}>"
 
 
 class Plugin:
@@ -117,12 +117,7 @@ class Plugin:
     @property
     def usage(self) -> str:
         """Help the user understand how to use the plugin properly"""
-        return " ".join(
-            [
-                f"<{arg.arg}>" if isinstance(arg, RequiredArg) else f"({arg.arg})"
-                for arg in self.arguments
-            ]
-        )
+        return " ".join([arg.arg for arg in self.arguments])
 
     @property
     def dependency_locked(self) -> bool:

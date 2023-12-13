@@ -1,11 +1,11 @@
-from typing import Any
+from base.custom_types import YetToBeDefined
 
 
 class Wardrobe:
-    skin: Any = None
-    color_cycle: Any = None
-    name_font: Any = None
-    halo: Any = None
-    hat: Any = None
-    particle: Any = None
-    eject_skin: Any = None
+    skin: YetToBeDefined | None = None
+    color_cycle: YetToBeDefined | None = None
+    name_font: YetToBeDefined | None = None
+    halo: YetToBeDefined | None = None
+    hat: YetToBeDefined | None = None
+    particle: YetToBeDefined | None = None
+    eject_skin: YetToBeDefined | None = None
