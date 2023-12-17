@@ -11,7 +11,7 @@ target-version = ['py311']
 
 [tool.ruff]
 # Never enforce `E501` (line length violations).
-ignore = ["E501", "C901", "I001", "N802"]
+ignore = ["E501", "C901", "I001", "N802", "N801"]
 select = [
     "C",
     "E",

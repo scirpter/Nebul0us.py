@@ -1,4 +1,5 @@
 from socket import socket, AF_INET, SOCK_DGRAM
+from binascii import hexlify, unhexlify
 
 
 WIRE_PORT = 27900
@@ -10,8 +11,17 @@ class Gowire:
         self.sock = socket(AF_INET, SOCK_DGRAM)
         self.sock.bind(("", WIRE_PORT))
 
-    def verify(self, data: str) -> None:
-        self.sock.sendto(f"VERIFY({data})".encode(), ("localhost", TARGET_WIRE_PORT))
+    def verify(self, stream: bytes) -> bytes:
+        self.sock.sendto(
+            f"VERIFY({hexlify(stream).decode()})".encode(),
+            ("localhost", TARGET_WIRE_PORT),
+        )
+
+        while True:
+            data, _ = self.sock.recvfrom(1024)
+            actual: str = data.decode()
+            if actual.startswith("VERIFY("):
+                return unhexlify(actual[7:-1])
 
     def recv(self) -> str:
         return self.sock.recv(1024).decode()

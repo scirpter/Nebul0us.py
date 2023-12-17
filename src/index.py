@@ -3,11 +3,9 @@ import logging
 import os
 from rich.logging import RichHandler
 
-from helpers.plugins import ScriptEvent
-
 
 def main() -> None:
-    app.dispatch(ScriptEvent.CALLBACK, "install", 90, 100)
+    ...
 
 
 if __name__ == "__main__":

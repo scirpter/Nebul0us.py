@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class HoleType(Enum):
+class HOLE_TYPE(Enum):
     (
         NORMAL,
         SUPERMASSIVE,

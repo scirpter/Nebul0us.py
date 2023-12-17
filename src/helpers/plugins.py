@@ -1,4 +1,5 @@
 from __future__ import annotations
+from abc import abstractmethod, ABC
 import logging
 from typing import Any, Callable
 from enum import Enum, auto
@@ -79,9 +80,10 @@ class RequiredArg:
         self.arg: str = f"<{arg}>"
 
 
-class Plugin:
+class Plugin(ABC):
     __instance: Plugin | None = None
 
+    @abstractmethod
     def __init__(
         self,
         *,
@@ -127,7 +129,7 @@ class Plugin:
         return self.__dependency_locked
 
     def ensure_dependencies(self) -> None:
-        ...  # TODO: finish this
+        _ = 1 + 1  # TODO: finish this
 
 
 class PluginRegistry:

@@ -1,5 +1,5 @@
 class ControlData:
-    speed: int = 0
+    __speed: float = 0.0
     __angle: int = 0
     do_eject: bool = False
     do_split: bool = False
@@ -7,6 +7,15 @@ class ControlData:
     do_item_use: bool = False  # alias for eject
 
     __tick: int = 0x00
+
+    @property
+    def speed(self) -> float:
+        """From 0.0 to 1.0"""
+        return self.__speed
+
+    @speed.setter
+    def speed(self, value: float) -> None:
+        self.__speed = value
 
     @property
     def tick(self) -> int:

@@ -4,20 +4,20 @@ import struct
 
 
 class JavaDataInputStream:
-    def __init__(self, data: bytes = b"") -> None:
-        self.stream = io.BytesIO(data)
+    def __init__(self, stream: bytes = b"") -> None:
+        self.stream = io.BytesIO(stream)
 
-    def get_data(self) -> bytes:
+    def get_stream(self) -> bytes:
         return self.stream.getvalue()
 
     def space_left(self) -> int:
-        return len(self.get_data()) - self.stream.tell()
+        return len(self.get_stream()) - self.stream.tell()
 
     def skip(self, amount: int) -> None:
         self.stream.seek(amount, io.SEEK_CUR)
 
     def to_hex_string(self) -> str:
-        return " ".join(f"{byte:02X}" for byte in self.get_data())
+        return " ".join(f"{byte:02X}" for byte in self.get_stream())
 
     def read_byte(self) -> int:
         return int.from_bytes(self.stream.read(1), "big", signed=True)
@@ -52,7 +52,7 @@ class JavaDataOutputStream:
     def __init__(self) -> None:
         self.stream = io.BytesIO()
 
-    def get_data(self) -> bytes:
+    def get_stream(self) -> bytes:
         return self.stream.getvalue()
 
     def write_byte(self, value: int) -> JavaDataOutputStream:
@@ -83,12 +83,12 @@ class JavaDataOutputStream:
         self.stream.write(struct.pack(">d", value))
         return self
 
-    def write_fully(self, data: bytes) -> JavaDataOutputStream:
-        self.stream.write(data)
+    def write_fully(self, stream: bytes) -> JavaDataOutputStream:
+        self.stream.write(stream)
         return self
 
     def write_utf(self, value: str) -> JavaDataOutputStream:
-        data: bytes = value.encode("utf-8")
-        self.write_short(len(data))
-        self.stream.write(data)
+        stream: bytes = value.encode("utf-8")
+        self.write_short(len(stream))
+        self.stream.write(stream)
         return self

@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class GameMode(Enum):
+class GAME_MODE(Enum):
     (
         FFA,
         FFA_TIME,

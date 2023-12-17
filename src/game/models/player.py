@@ -1,5 +1,5 @@
 import math
-from base.custom_types import EntityId
+from base.custom_types import ENTITY_ID
 from game.models.blob import Blob
 from game.models.entity import WorldEntity
 
@@ -15,7 +15,7 @@ class Player(WorldEntity):
     particles_id: int | None
 
     def __init__(
-        self, relative_entity_id: EntityId, name: str, account_id: int
+        self, relative_entity_id: ENTITY_ID, name: str, account_id: int
     ) -> None:
         super().__init__(relative_entity_id)
         self.name: str = name

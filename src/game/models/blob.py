@@ -1,11 +1,11 @@
-from base.custom_types import EntityId
+from base.custom_types import ENTITY_ID
 from game.models.entity import WorldEntity
 
 
 class Blob(WorldEntity):
     def __init__(
         self,
-        relative_entity_id: EntityId,
+        relative_entity_id: ENTITY_ID,
         pos: tuple[float, float],
         mass: float,
     ) -> None:

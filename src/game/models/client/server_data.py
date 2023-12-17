@@ -1,4 +1,4 @@
-from game.enums import ProfileVisibility
+from game.enums import PROFILE_VISIBILITY
 from game.models.world import World
 
 
@@ -6,7 +6,7 @@ class ServerData:
     name: str
     login_ticket: str
     server_ip: str
-    profile_visibility: ProfileVisibility = ProfileVisibility.APPEAR_OFFLINE
+    profile_visibility: PROFILE_VISIBILITY = PROFILE_VISIBILITY.APPEAR_OFFLINE
     is_idle: bool = False
     world: World = World()
 

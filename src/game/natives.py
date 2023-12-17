@@ -1,4 +1,10 @@
 from helpers.java_data_stream import JavaDataInputStream
+from datetime import datetime
+
+
+def GET_COMMON_REQUEST_STAMP() -> int:
+    """unix nano / 1000000"""
+    return int(datetime.now().timestamp() * 1000)
 
 
 def RNATIVE_OBJ_DATA_RELATIVE(

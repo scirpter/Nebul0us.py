@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ProfileVisibility(Enum):
+class PROFILE_VISIBILITY(Enum):
     (
         ONLINE,
         APPEAR_OFFLINE,

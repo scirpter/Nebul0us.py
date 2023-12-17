@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class PacketType(Enum):
+class PACKET_TYPE(Enum):
     (
         INVALID,
         CONNECT_RESULT_2,

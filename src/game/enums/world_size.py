@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class WorldSize(Enum):
+class WORLD_SIZE(Enum):
     (
         TINY,
         SMALL,

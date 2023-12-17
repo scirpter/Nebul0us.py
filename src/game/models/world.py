@@ -1,4 +1,4 @@
-from game.enums import GameMode, WorldSize, Difficulty, SplitMultiplier
+from game.enums import GAME_MODE, WORLD_SIZE, DIFFICULTY, SPLIT_MULTIPLIER
 from game.models.dot import Dot
 from game.models.ejection import Ejection
 from game.models.hole import Hole
@@ -10,12 +10,12 @@ from game.models.spell import Spell
 class World:
     name: str | None
     time_left: int | None
-    game_mode: GameMode | None
+    game_mode: GAME_MODE | None
     max_players: int | None
     spectator_count: int | None
     tick: int | None
     raw_size: float | None
-    size: WorldSize | None
+    size: WORLD_SIZE | None
     token: int | None
 
     ejections: dict[int, Ejection] = {}
@@ -51,13 +51,13 @@ class WorldProps:
         is_hidden: bool,
         min_players: int,
         max_players: int,
-        game_mode: GameMode,
-        size: WorldSize,
-        difficulty: Difficulty,
+        game_mode: GAME_MODE,
+        size: WORLD_SIZE,
+        difficulty: DIFFICULTY,
         name: str,
         duration_minutes: int | None,
         is_mayhem: bool,
-        split_multiplier: SplitMultiplier,
+        split_multiplier: SPLIT_MULTIPLIER,
         allow_ultra_click: bool,
         allow_mass_boost: bool,
         allow_rainbow_holes: bool,
@@ -69,13 +69,13 @@ class WorldProps:
         self.is_hidden: bool = is_hidden
         self.min_players: int = min_players
         self.max_players: int = max_players
-        self.game_mode: GameMode = game_mode
-        self.size: WorldSize = size
-        self.difficulty: Difficulty = difficulty
+        self.game_mode: GAME_MODE = game_mode
+        self.size: WORLD_SIZE = size
+        self.difficulty: DIFFICULTY = difficulty
         self.name: str = name
         self.duration_minutes: int | None = duration_minutes
         self.is_mayhem: bool = is_mayhem
-        self.split_multiplier: SplitMultiplier = split_multiplier
+        self.split_multiplier: SPLIT_MULTIPLIER = split_multiplier
         self.allow_ultra_click: bool = allow_ultra_click
         self.allow_mass_boost: bool = allow_mass_boost
         self.allow_rainbow_holes: bool = allow_rainbow_holes
