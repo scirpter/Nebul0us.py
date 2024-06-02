@@ -56,7 +56,7 @@ class JavaDataOutputStream:
         return self.stream.getvalue()
 
     def write_byte(self, value: int) -> JavaDataOutputStream:
-        self.stream.write(value.to_bytes(1, "big", signed=True))
+        self.stream.write(value.to_bytes(1, "big"))
         return self
 
     def write_bool(self, value: bool) -> JavaDataOutputStream:
@@ -64,15 +64,15 @@ class JavaDataOutputStream:
         return self
 
     def write_short(self, value: int) -> JavaDataOutputStream:
-        self.stream.write(value.to_bytes(2, "big", signed=True))
+        self.stream.write(value.to_bytes(2, "big"))
         return self
 
     def write_int(self, value: int) -> JavaDataOutputStream:
-        self.stream.write(value.to_bytes(4, "big", signed=True))
+        self.stream.write(value.to_bytes(4, "big"))
         return self
 
     def write_long(self, value: int) -> JavaDataOutputStream:
-        self.stream.write(value.to_bytes(8, "big", signed=True))
+        self.stream.write(value.to_bytes(8, "big"))
         return self
 
     def write_float(self, value: float) -> JavaDataOutputStream:

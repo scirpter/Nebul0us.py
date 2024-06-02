@@ -1,19 +1,21 @@
 from game.enums import PROFILE_VISIBILITY
-from game.models.world import World
+from game.enums.server import Server
+from game.models.world import VisibleWorld
 
 
-class ServerData:
-    name: str
-    login_ticket: str
-    server_ip: str
-    profile_visibility: PROFILE_VISIBILITY = PROFILE_VISIBILITY.APPEAR_OFFLINE
-    is_idle: bool = False
-    world: World = World()
+class ClientData:
+    def __init__(self) -> None:
+        self.name: str = "NULL"
+        self.login_ticket: str = ",-"
+        self.server: Server = Server.EUROPE
+        self.profile_visibility: PROFILE_VISIBILITY = PROFILE_VISIBILITY.APPEAR_OFFLINE
+        self.is_idle: bool = False
+        self.world: VisibleWorld = VisibleWorld()
 
-    __cr2_token1: int
-    __cr2_token2: int
-    __rng_token1: int
-    __rng_token2: int
+        self.__cr2_token1: int = 0
+        self.__cr2_token2: int = 0
+        self.__rng_token1: int = 0
+        self.__rng_token2: int = 0
 
     @property
     def cr2_token1(self) -> int:

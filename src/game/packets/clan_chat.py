@@ -1,16 +1,15 @@
 from game.enums import CLAN_RANK
-from helpers.plugins import ScriptEvent
-from enums.packet_type import PACKET_TYPE
+
 from helpers.java_data_stream import JavaDataInputStream
 from game.models.client.client import Client
-from packets.packet import Packet
+from .packet import Packet
 
 
 class CLAN_CHAT(Packet):
-    def __init__(self, client: Client, stream: bytes = b"") -> None:
-        super().__init__(client, PACKET_TYPE.CLAN_CHAT_MESSAGE, stream)
+    def __init__(self, client: Client, stream: bytes = b"", message: str = "") -> None:
+        super().__init__(client, self, stream)
         self.player_name: str = ""
-        self.message: str = ""
+        self.message: str = message
         self.player_clan_rank: CLAN_RANK = CLAN_RANK.INVALID
         self.player_account_id: int = 0
 
@@ -36,7 +35,8 @@ class CLAN_CHAT(Packet):
         if stream.space_left() > 0:
             stream.read_bool()
 
-        self.client.app.dispatch(ScriptEvent.PACKET_READ, self)
+    def write(self) -> bytes:
+        raise NotImplementedError("This packet cannot be written")
 
     @property
     def battle_royale_register_count(self) -> int:

@@ -1,5 +1,5 @@
 from socket import socket, AF_INET, SOCK_DGRAM
-from binascii import hexlify, unhexlify
+from threading import Lock
 
 
 WIRE_PORT = 27900
@@ -10,18 +10,17 @@ class Gowire:
     def __init__(self) -> None:
         self.sock = socket(AF_INET, SOCK_DGRAM)
         self.sock.bind(("", WIRE_PORT))
+        self.verify_lock = Lock()
 
-    def verify(self, stream: bytes) -> bytes:
-        self.sock.sendto(
-            f"VERIFY({hexlify(stream).decode()})".encode(),
-            ("localhost", TARGET_WIRE_PORT),
-        )
+    def verify(self, license_key: str, connect_request_stream: bytes) -> bytes:
+        with self.verify_lock:
+            self.sock.sendto(
+                f"VERIFY::{connect_request_stream.decode()}::{license_key}".encode(),
+                ("localhost", TARGET_WIRE_PORT),
+            )
 
-        while True:
             data, _ = self.sock.recvfrom(1024)
-            actual: str = data.decode()
-            if actual.startswith("VERIFY("):
-                return unhexlify(actual[7:-1])
+            return data
 
     def recv(self) -> str:
         return self.sock.recv(1024).decode()

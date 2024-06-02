@@ -1,21 +1,12 @@
 from time import sleep
-from base.app import App
 from game.sigs import APP_NAME_SIG, APP_VERSION_SIG
-from helpers.plugins import Plugin
 from requests import Response, post
 
 
 RETRY_DELAY_S = 2
 
 
-class UnproxiedConnectAuth(Plugin):
-    def __init__(self) -> None:
-        super().__init__(
-            name="UnproxiedConnectAuth",
-            description="Authorize the client connection to the server",
-            author="Discord: qxh",
-        )
-
+class UnproxiedConnectAuth:
     @staticmethod
     def verify(
         client_auth_ticket: str | None = ",-", force_verify: bool = False
@@ -44,7 +35,3 @@ class UnproxiedConnectAuth(Plugin):
             return Exception(
                 f"Failed to verify connection: {response.status_code} (are you spamming? Consider proxying your connection)"
             )
-
-
-def setup(app: App) -> None:
-    app.plugin_registry.register(UnproxiedConnectAuth())

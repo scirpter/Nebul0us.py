@@ -1,0 +1,15 @@
+from enum import Enum
+
+
+class Server(Enum):
+    US_EAST = "45.56.113.95"
+    US_WEST = "45.79.69.110"
+    EUROPE = "172.105.248.252"
+    SOUTH_KOREA = "158.247.231.199"
+    ASIA = "139.162.49.99"
+    SOUTH_AMERICA = "216.238.98.140"
+    AUSTRALIA = "45.79.238.85"
+    JAPAN = "139.162.86.191"
+    MIDDLE_EAST = "15.185.65.160"
+    SOUTH_AFRICA = "139.84.232.5"
+    INDIA = "194.195.115.5"

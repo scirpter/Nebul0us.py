@@ -1,25 +1,25 @@
 import math
-from base.custom_types import ENTITY_ID
+from base.custom_types import RELATIVE_ENTITY_ID
 from game.models.blob import Blob
 from game.models.entity import WorldEntity
 
 
 class Player(WorldEntity):
-    cr2_token_2: int | None
-    clan_name: str | None
-    level: int | None
-    skin_id: int | None
-    hat_id: int | None
-    halo_id: int | None
-    blobs: list[Blob] = []
-    particles_id: int | None
-
-    def __init__(
-        self, relative_entity_id: ENTITY_ID, name: str, account_id: int
-    ) -> None:
+    def __init__(self, relative_entity_id: RELATIVE_ENTITY_ID) -> None:
         super().__init__(relative_entity_id)
-        self.name: str = name
-        self.account_id: int = account_id
+
+        self.name: str = "NULL"
+        self.account_id: int = -1
+        self.cr2_token2: int | None
+        self.clan_name: str | None
+        self.level: int | None
+        self.skin_id: int | None
+        self.hat_id: int | None
+        self.halo_id: int | None
+        self.blobs: list[Blob] = []
+        self.particles_id: int | None
+        self.cycle_id: int | None
+        self.M: int | None = None
 
     def get_mass(self) -> float:
         return sum(blob.mass for blob in self.blobs.copy())
@@ -33,8 +33,8 @@ class Player(WorldEntity):
     def get_avg_pos(self) -> tuple[float, float]:
         blobs: list[Blob] = self.blobs.copy()
         return (
-            sum(blob.pos[0] for blob in blobs) / len(blobs),
-            sum(blob.pos[1] for blob in blobs) / len(blobs),
+            sum(blob.pos.x for blob in blobs) / len(blobs),
+            sum(blob.pos.y for blob in blobs) / len(blobs),
         )
 
     def get_blob_sorted(self, rank: int = 0) -> Blob | None:

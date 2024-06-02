@@ -1,3 +1,4 @@
+from base.custom_types import RELATIVE_ENTITY_ID
 from game.enums import GAME_MODE, WORLD_SIZE, DIFFICULTY, SPLIT_MULTIPLIER
 from game.models.dot import Dot
 from game.models.ejection import Ejection
@@ -7,23 +8,24 @@ from game.models.player import Player
 from game.models.spell import Spell
 
 
-class World:
-    name: str | None
-    time_left: int | None
-    game_mode: GAME_MODE | None
-    max_players: int | None
-    spectator_count: int | None
-    tick: int | None
-    raw_size: float | None
-    size: WORLD_SIZE | None
-    token: int | None
+class VisibleWorld:
+    def __init__(self) -> None:
+        self.name: str | None
+        self.time_left: int | None
+        self.game_mode: GAME_MODE | None
+        self.max_players: int | None
+        self.spectator_count: int | None
+        self.tick: int | None
+        self.raw_size: float | None
+        self.size: WORLD_SIZE | None
+        self.token: int | None
 
-    ejections: dict[int, Ejection] = {}
-    players: dict[int, Player] = {}
-    dots: dict[int, Dot] = {}
-    items: dict[int, Item] = {}
-    spells: dict[int, Spell] = {}
-    holes: dict[int, Hole] = {}
+        self.ejections: dict[RELATIVE_ENTITY_ID, Ejection] = {}
+        self.players: dict[RELATIVE_ENTITY_ID, Player] = {}
+        self.dots: dict[RELATIVE_ENTITY_ID, Dot] = {}
+        self.items: dict[RELATIVE_ENTITY_ID, Item] = {}
+        self.spells: dict[RELATIVE_ENTITY_ID, Spell] = {}
+        self.holes: dict[RELATIVE_ENTITY_ID, Hole] = {}
 
     def reset(self) -> None:
         self.name = None
@@ -44,7 +46,7 @@ class World:
         self.holes.clear()
 
 
-class WorldProps:
+class WorldCreatorProps:
     def __init__(
         self,
         *,

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import Enum
 
 
@@ -124,3 +125,10 @@ class PACKET_TYPE(Enum):
         CONNECT_REQUEST_3,
         ARENA_CD_INTERNAL,
     ) = range(120)
+
+    @staticmethod
+    def get_type_from_str(name: str) -> PACKET_TYPE:
+        for packet_type in PACKET_TYPE:
+            if packet_type.name == name:
+                return packet_type
+        return PACKET_TYPE.INVALID
