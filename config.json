@@ -1,19 +1,19 @@
 {
-  "license_key": "",
-  "theme": {
-    "background_color_hex": "#000000",
-    "primary_color_hex": "#ffffff",
-    "secondary_color_hex": "#ffffff",
-    "tertiary_color_hex": "#ffffff",
-    "background_image_url": "C:\\Users\\0\\Desktop\\store\\Images\\lost signal\\ab67616d00001e029bca36b846eb15c61ff5751a.jpg",
-    "background_image_opacity": 0.2
-  },
-  "bin_text": "Hi this is some text",
-  "client_settings": [],
-  "auto_save_config": true,
-  "general_settings": {
-    "detect_moderators": false,
+    "license_key": "",
+    "theme": {
+        "background_color_hex": "#000000",
+        "primary_color_hex": "#ffffff",
+        "secondary_color_hex": "#ffffff",
+        "tertiary_color_hex": "#ffffff",
+        "background_image_url": "C:\\Users\\0\\Desktop\\store\\Images\\lost signal\\ab67616d00001e029bca36b846eb15c61ff5751a.jpg",
+        "background_image_opacity": 0.2
+    },
+    "bin_text": "Hi this is some text",
+    "client_settings": [],
     "auto_save_config": true,
-    "trace_packets": false
-  }
+    "general_settings": {
+        "detect_moderators": false,
+        "auto_save_config": true,
+        "trace_packets": false
+    }
 }
