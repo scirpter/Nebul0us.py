@@ -9,24 +9,7 @@
         "background_image_opacity": 0.2
     },
     "bin_text": "Hi this is some text",
-    "client_settings": [
-        {
-            "client_uid": 33203335,
-            "player_name": "whj",
-            "login_ticket": "33203335,5250607818608070279,CH+lM0g2lfi4nyR5WZrMOaPDxFJ8enHO0c01bjdkAsqCRgPMi85sLQ9Ve4NY3US9pC/dDAlwjvHfmKoOgJUJH2ZnyPJnFrjV+ZlFk+IhBbQfXjTZQdPxyHXFgnH+16x5YmjaYLErv1kziZjIfqDje7rSN1m86gxc9Wd05lTD5JY=",
-            "profile_visibility": "ONLINE",
-            "idle_keep_alive_ms": 502,
-            "active_keep_alive_ms": 52
-        },
-        {
-            "client_uid": 32697022,
-            "player_name": "Aspeda2",
-            "login_ticket": "32697022,5250401274019506738,HF3YYvhmV4nEV2CYcMbBEpOnkQecSJ0hKwxPEs89DArQYtNFwD60HJ0HP8o6XC/Lz6wNI3wfcmcUxToeluNFgjQZ28Ghc/NpmSW62MTMxbUNWpdtWU3L8w23SQov/r1pd7NgmhRpfAYMvKmxZyJw4/GMo3raHqIRGR98/635vDk=",
-            "profile_visibility": "ONLINE",
-            "idle_keep_alive_ms": 508,
-            "active_keep_alive_ms": 52
-        }
-    ],
+    "client_settings": [],
     "auto_save_config": true,
     "general_settings": {
         "detect_moderators": false,
