@@ -1,0 +1,1 @@
+flet run -d -r src/main.py --name 2oh

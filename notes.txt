@@ -1,0 +1,22 @@
+8d
+34196b1a
+f0a1256a
+00
+01  # upgrade row 1 item 1
+01
+
+
+8d
+40b32146
+31bda3e0
+00
+10 = 16 | row 1 item 2
+01
+
+
+8d
+454b8277
+b4bb9f37
+00
+06  # item 3 row 1
+01

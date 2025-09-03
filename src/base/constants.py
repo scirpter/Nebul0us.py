@@ -1,0 +1,1 @@
+VALID_HEX_CHARS = "0123456789abcdef"
