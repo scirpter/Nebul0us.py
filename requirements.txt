@@ -1,0 +1,20 @@
+########################################
+# Runtime dependencies
+# Detected from source imports (non-stdlib)
+########################################
+flet>=0.24.0  # UI framework used across src/ui/*.py
+requests>=2.31.0  # HTTP calls in src/game/api.py
+
+########################################
+# (Optional) Dev / tooling dependencies
+# Uncomment if you want a single file install for lint/format/type/test
+########################################
+# black>=24.0.0
+# ruff>=0.5.0
+# pyright>=1.1.380
+# pytest>=8.2.0
+
+# Notes:
+# - Versions are minimum suggested; pin (==) for full reproducibility.
+# - Remove anything you don't need, or move tooling deps to a separate
+#   requirements-dev.txt if you prefer.
