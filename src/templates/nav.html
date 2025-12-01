@@ -1,0 +1,12 @@
+<header class="w-full flex justify-center pt-6">
+  <nav class="flex gap-3 text-sm font-semibold px-4 py-2 backdrop-blur rounded-full border"
+       style="background: linear-gradient(120deg, color-mix(in srgb, var(--color-surface) 80%, black 20%), color-mix(in srgb, var(--color-surface) 70%, var(--color-primary) 30%)); border-color: color-mix(in srgb, var(--color-border) 85%, var(--color-primary) 15%);">
+    <a class="px-3 py-1 rounded-full hover:text-slate-100 {% if request.url.path == '/' %}text-slate-100{% else %}text-slate-400{% endif %}" href="/">Home</a>
+    <a class="px-3 py-1 rounded-full hover:text-slate-100 {% if request.url.path.startswith('/bots') %}text-slate-100{% else %}text-slate-400{% endif %}" href="/bots">Bots</a>
+    <a class="px-3 py-1 rounded-full hover:text-slate-100 {% if request.url.path.startswith('/lobbies') %}text-slate-100{% else %}text-slate-400{% endif %}" href="/lobbies">Lobbies</a>
+    <a class="px-3 py-1 rounded-full hover:text-slate-100 {% if request.url.path.startswith('/general') %}text-slate-100{% else %}text-slate-400{% endif %}" href="/general">General</a>
+    <a class="px-3 py-1 rounded-full hover:text-slate-100 {% if request.url.path.startswith('/abuse') %}text-slate-100{% else %}text-slate-400{% endif %}" href="/abuse">Abuse</a>
+    <a class="px-3 py-1 rounded-full hover:text-slate-100 {% if request.url.path.startswith('/worlddbg') %}text-slate-100{% else %}text-slate-400{% endif %}" href="/worlddbg">WorldDBG</a>
+    <a class="px-3 py-1 rounded-full hover:text-slate-100 {% if request.url.path.startswith('/bin') %}text-slate-100{% else %}text-slate-400{% endif %}" href="/bin">Bin</a>
+  </nav>
+</header>

@@ -26,7 +26,7 @@ from game.packets.packet import Packet
 from game.packets.ping import PING
 from game.packets.private_search_list_request import PRIVATE_SEARCH_LIST_REQUEST
 from game.packets.spectate_game_request import SPECTATE_GAME_REQUEST
-from helpers.common import get_packet_class_by_id
+from helpers.common import angle_between_points, get_packet_class_by_id
 from helpers.config_integrity import PerClientSettings
 from threading import Thread
 from game.enums import GAME_MODE
@@ -49,7 +49,12 @@ class Client:
         self.control_data = ControlData()
         self.client_data = ClientData(self)
         self.player_data = PlayerData(self)
-        self.options_data = OptionsData()
+        self.options_data = OptionsData(
+            chase_nearest_holes=bool(
+                self.settings.get("chase_nearest_holes", True)
+            ),
+            auto_respawn=bool(self.settings.get("auto_respawn", True)),
+        )
         self.private_search_list = PrivateSearchList()
         self.last_packet_received_at: None | datetime = None
         self.__sock_connected = False
@@ -64,6 +69,14 @@ class Client:
         ]
         for loop in loops:
             Thread(target=loop).start()
+
+    def move_towards(
+        self, from_x: int, from_y: int, x: int, y: int, split: bool = False
+    ) -> None:
+        self.control_data.angle = angle_between_points(x, y, from_x, from_y)
+        self.control_data.speed = 1
+        if split:
+            self.control_data.do_split = True
 
     def connect(
         self,
@@ -240,7 +253,7 @@ class Client:
         def non_blocking() -> None:
             while True:
                 holes = self.client_data.world.holes.copy().values()
-                holes_allive = [hole for hole in holes if not hole.is_dead()]
+                holes_allive = [hole for hole in holes if not hole.is_present()]
                 if len(holes_allive) == len(holes):
                     self.start_playing()
                     break

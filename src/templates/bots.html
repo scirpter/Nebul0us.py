@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+  <section class="card p-6 space-y-4">
+    <div class="flex justify-between items-center flex-wrap gap-3">
+      <div>
+        <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Fleet</p>
+        <h1 class="text-2xl font-bold accent-text">Bots</h1>
+        <p id="bots-live-summary" class="text-sm text-slate-400">
+          {{ summary.connected_clients }} / {{ summary.total_clients }} connected
+        </p>
+      </div>
+      <form class="flex gap-2 items-center flex-wrap" action="/bots/add" method="post" data-async="soft-reload">
+        <input class="px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm" name="name" placeholder="Bot Name" required />
+        <input class="px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm" name="ticket" placeholder="Bot Ticket" required />
+        <button class="btn" type="submit">Add Bot</button>
+      </form>
+    </div>
+    <div class="grid gap-4 lg:grid-cols-2">
+      {% if clients %}
+        {% for c in clients %}
+        <div class="p-4 rounded-2xl border border-slate-700/60 bg-slate-900/60 space-y-3" data-client-card="{{ c.client_data.uid }}">
+          <div class="flex justify-between items-start">
+            <div>
+              <form class="flex items-center gap-2" action="/bots/rename/{{ c.client_data.uid }}" method="post" data-async>
+                <input name="name" value="{{ c.client_data.name }}" class="px-2 py-1 rounded-lg bg-slate-900/60 border border-slate-700 text-sm text-slate-100 w-36" />
+                <button class="text-xs text-slate-300 hover:text-slate-100" type="submit">Rename</button>
+              </form>
+              <div class="text-xs text-slate-500">UID {{ c.client_data.uid }}</div>
+              <div class="text-xs text-slate-500 mt-1">
+                <button type="button" class="text-slate-300 hover:text-slate-100" onclick="toggleToken('token-{{ c.client_data.uid }}')">Edit token</button>
+              </div>
+              <form id="token-{{ c.client_data.uid }}" class="hidden mt-2 flex items-center gap-2" action="/bots/update-ticket/{{ c.client_data.uid }}" method="post" data-async>
+                <input name="ticket" value="{{ c.client_data.login_ticket }}" class="px-2 py-1 rounded-lg bg-slate-900/60 border border-slate-700 text-sm text-slate-100 w-48" type="password" />
+                <button class="text-xs text-slate-300 hover:text-slate-100" type="submit">Save</button>
+              </form>
+            </div>
+            <form action="/bots/delete/{{ c.client_data.uid }}" method="post" data-async data-remove-card="{{ c.client_data.uid }}">
+              <button class="text-xs text-rose-200 hover:text-rose-100" type="submit">Delete</button>
+            </form>
+          </div>
+          <div class="flex flex-wrap gap-2 items-center text-xs text-slate-400">
+            <span class="chip {% if c.is_connected %}!bg-emerald-500/20{% else %}!bg-rose-500/20{% endif %}" data-client-status="{{ c.client_data.uid }}">
+              {% if c.is_connected %}Connected{% else %}Offline{% endif %}
+            </span>
+          </div>
+          <form class="grid grid-cols-2 gap-2" action="/bots/connect/{{ c.client_data.uid }}" method="post" data-async>
+            <select name="region" class="px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm">
+              {% for r in regions %}
+                <option value="{{ r }}" {% if c.client_data.server_region == r %}selected{% endif %}>{{ r }}</option>
+              {% endfor %}
+            </select>
+            <select name="mode" class="px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm">
+              {% for m in modes %}
+                <option value="{{ m }}" {% if c.settings.get('game_mode') == m %}selected{% endif %}>{{ m }}</option>
+              {% endfor %}
+            </select>
+            <label class="toggle">
+              <input class="toggle-input" type="checkbox" name="mayhem" />
+              <span class="toggle-display" aria-hidden="true"></span>
+              <span class="toggle-text">Mayhem</span>
+            </label>
+            <label class="toggle">
+              <input class="toggle-input" type="checkbox" name="private" />
+              <span class="toggle-display" aria-hidden="true"></span>
+              <span class="toggle-text">Private Search</span>
+            </label>
+            <label class="toggle">
+              <input
+                class="toggle-input"
+                type="checkbox"
+                data-option-toggle="auto_respawn"
+                data-client="{{ c.client_data.uid }}"
+                {% if c.options_data.auto_respawn %}checked{% endif %}
+              />
+              <span class="toggle-display" aria-hidden="true"></span>
+              <span class="toggle-text">Auto Respawn</span>
+            </label>
+            <label class="toggle">
+              <input
+                class="toggle-input"
+                type="checkbox"
+                data-option-toggle="chase_nearest_holes"
+                data-client="{{ c.client_data.uid }}"
+                {% if c.options_data.chase_nearest_holes %}checked{% endif %}
+              />
+              <span class="toggle-display" aria-hidden="true"></span>
+              <span class="toggle-text">Chase Nearest Holes</span>
+            </label>
+            <button class="btn col-span-2" type="submit">Connect</button>
+          </form>
+          <div class="flex gap-2 flex-wrap">
+            <form action="/bots/start/{{ c.client_data.uid }}" method="post" data-async>
+              <button class="btn" type="submit">Start Playing</button>
+            </form>
+            <form action="/bots/disconnect/{{ c.client_data.uid }}" method="post" data-async>
+              <button class="btn" type="submit">Disconnect</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-slate-500 text-sm">No bots yet. Add one above.</p>
+      {% endif %}
+    </div>
+  </section>
+</main>
+<script>
+  function toggleToken(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('hidden');
+  }
+
+  (() => {
+    const summaryEl = document.getElementById('bots-live-summary');
+
+    function updateStatusChip(uid, isConnected) {
+      const chip = document.querySelector(`[data-client-status="${uid}"]`);
+      if (!chip) return;
+      chip.textContent = isConnected ? 'Connected' : 'Offline';
+      chip.classList.toggle('!bg-emerald-500/20', Boolean(isConnected));
+      chip.classList.toggle('!bg-rose-500/20', !isConnected);
+    }
+
+    function updateSummary(summary) {
+      if (!summaryEl || !summary) return;
+      summaryEl.textContent = `${summary.connected_clients} / ${summary.total_clients} connected`;
+    }
+
+    function syncOptionToggle(uid, key, value) {
+      const toggle = document.querySelector(
+        `[data-option-toggle="${key}"][data-client="${uid}"]`
+      );
+      if (toggle) {
+        toggle.checked = Boolean(value);
+      }
+    }
+
+    async function updateOptions(uid, payload) {
+      try {
+        const res = await fetch(`/bots/options/${uid}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Failed to update bot options');
+        }
+        if (typeof createToast === 'function') {
+          createToast({ title: 'Bot Options', message: 'Saved changes' });
+        }
+      } catch (err) {
+        if (typeof console !== 'undefined') {
+          console.error(err);
+        }
+        if (typeof createToast === 'function') {
+          createToast({ title: 'Bot Options', message: String(err) });
+        }
+      }
+    }
+
+    document.querySelectorAll('[data-option-toggle]').forEach((toggle) => {
+      toggle.addEventListener('change', () => {
+        const uid = toggle.dataset.client;
+        const key = toggle.dataset.optionToggle;
+        if (!uid || !key) return;
+        updateOptions(uid, { [key]: toggle.checked });
+      });
+    });
+
+    function handleAsyncForms() {
+      document.querySelectorAll('form[data-async]').forEach((form) => {
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const formData = new FormData(form);
+          try {
+            const res = await fetch(form.action, {
+              method: form.method || 'POST',
+              body: formData,
+            });
+            if (!res.ok) {
+              throw new Error(`Request failed (${res.status})`);
+            }
+            if (form.dataset.removeCard) {
+              const card = document.querySelector(
+                `[data-client-card="${form.dataset.removeCard}"]`
+              );
+              if (card) card.remove();
+            }
+            if (form.dataset.async === 'soft-reload') {
+              setTimeout(() => window.location.reload(), 200);
+            }
+            if (typeof createToast === 'function') {
+              createToast({ title: 'Bots', message: 'Action sent' });
+            }
+          } catch (err) {
+            if (typeof console !== 'undefined') console.error(err);
+            if (typeof createToast === 'function') {
+              createToast({ title: 'Bots', message: String(err) });
+            }
+          }
+        });
+      });
+    }
+
+    handleAsyncForms();
+
+    function handleSocket(detail) {
+      if (!detail || detail.type !== 'bots:status') return;
+      (detail.clients || []).forEach((client) => {
+        updateStatusChip(client.uid, client.is_connected);
+        syncOptionToggle(client.uid, 'auto_respawn', client.auto_respawn);
+        syncOptionToggle(
+          client.uid,
+          'chase_nearest_holes',
+          client.chase_nearest_holes
+        );
+      });
+      updateSummary(detail.summary);
+    }
+
+    window.addEventListener('ws-message', (e) => handleSocket(e.detail));
+  })();
+</script>
+{% endblock %}

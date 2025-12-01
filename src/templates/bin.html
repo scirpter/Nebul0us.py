@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="max-w-4xl mx-auto px-6 py-10 space-y-8">
+  <section class="card p-6 space-y-4">
+    <div>
+      <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Scratchpad</p>
+      <h1 class="text-2xl font-bold accent-text">Bin</h1>
+    </div>
+    <form class="space-y-3" action="/bin/save" method="post">
+      <textarea name="bin_text" class="w-full min-h-[260px] px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm">{{ text }}</textarea>
+      <button class="btn" type="submit">Save</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

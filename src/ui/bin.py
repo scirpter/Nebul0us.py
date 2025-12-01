@@ -1,28 +1,25 @@
 from __future__ import annotations
-import flet as ft
+
+from nicegui import events, ui
 
 from base.app import App
+from ui.components.cards import glass_card
 
 
-class BinTab(ft.Tab):
-    def __init__(self, app: App) -> None:
-        super().__init__(  # type: ignore
-            text="Bin",
-            icon=ft.Icons.DELETE,
-            content=ft.Column(
-                controls=[
-                    ft.Container(margin=ft.Margin(0, 10, 0, 0)),
-                    ft.TextField(
-                        app.states["bin_text"],
-                        border_color=ft.Colors.GREY,
-                        shift_enter=True,
-                        on_change=self.on_bin_text_change,
-                    ),
-                ],
-                scroll=ft.ScrollMode.ALWAYS,
-            ),
+def render(app: App) -> None:
+    with glass_card():
+        ui.label("Scratchpad").classes("text-lg font-semibold text-slate-100")
+        ui.label("A simple space to stash temporary notes. Content persists with the rest of your config.").classes(
+            "text-sm text-slate-400"
         )
-        self.app: App = app
 
-    def on_bin_text_change(self, e: ft.ControlEvent) -> None:
-        self.app.states["bin_text"] = e.control.value  # type: ignore
+        def on_change(event: events.ValueChangeEventArguments) -> None:
+            app.states["bin_text"] = event.value or ""
+
+        ui.textarea(
+            value=app.states.get("bin_text", ""),
+            on_change=on_change,
+            placeholder="Write something here that you need to save for later.",
+        ).classes(
+            "w-full min-h-[320px] bg-slate-950/70 border border-slate-800 rounded-xl text-slate-200"
+        ).props("autogrow")

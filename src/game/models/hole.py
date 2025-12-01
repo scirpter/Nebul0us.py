@@ -27,8 +27,9 @@ class Hole(WorldEntity):
         self.type = type
         self.mass = mass
 
-    def is_dead(self) -> bool:
-        return self.mass == 0
+    def is_present(self) -> bool:
+        """Whether hole is actually 'present' for the client"""
+        return self.mass != 0
 
     @staticmethod
     def combine_data(all_clients: list[Client]) -> list[Hole]:

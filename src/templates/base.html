@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2oh Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --color-primary: {{ theme.primary }};
+      --color-secondary: {{ theme.secondary }};
+      --color-tertiary: {{ theme.tertiary }};
+      --color-bg: {{ theme.background }};
+      --color-surface: {{ theme.surface }};
+      --color-surface-2: color-mix(in srgb, var(--color-surface) 80%, black 20%);
+      --color-border: color-mix(in srgb, var(--color-surface) 65%, white 18%);
+      --color-text: #f5f5f6;
+    }
+    html, body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background:
+        radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--color-primary) 34%, transparent), transparent 52%),
+        radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--color-tertiary) 22%, transparent), transparent 48%),
+        radial-gradient(circle at 58% 86%, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 58%),
+        linear-gradient(135deg, color-mix(in srgb, var(--color-bg) 94%, black 6%), color-mix(in srgb, var(--color-bg) 88%, black 12%));
+      color: var(--color-text);
+    }
+    .card {
+      background: linear-gradient(170deg,
+        color-mix(in srgb, var(--color-surface) 94%, white 4%),
+        color-mix(in srgb, var(--color-surface) 86%, black 14%));
+      border: 1px solid color-mix(in srgb, var(--color-border) 90%, var(--color-primary) 10%);
+      box-shadow: 0 25px 70px rgba(0,0,0,0.32), 0 1px 0 rgba(255,255,255,0.06);
+      border-radius: 20px;
+    }
+    .surface {
+      background: color-mix(in srgb, var(--color-surface) 94%, black 6%);
+    }
+    .btn {
+      background: var(--color-primary);
+      color: #100916;
+      border: 1px solid color-mix(in srgb, var(--color-primary) 85%, white 15%);
+      border-radius: 9999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 30px color-mix(in srgb, var(--color-primary) 25%, transparent);
+    }
+    .chip {
+      background: color-mix(in srgb, var(--color-secondary) 20%, var(--color-surface) 80%);
+      color: var(--color-text);
+      border-radius: 9999px;
+      padding: 6px 10px;
+      font-weight: 600;
+      border: 1px solid color-mix(in srgb, var(--color-secondary) 50%, transparent);
+    }
+    .accent-text {
+      background: linear-gradient(120deg,
+        color-mix(in srgb, var(--color-primary) 70%, white 30%),
+        color-mix(in srgb, var(--color-secondary) 60%, white 40%),
+        color-mix(in srgb, var(--color-tertiary) 60%, white 40%));
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    .toggle {
+      --toggle-on: var(--color-primary);
+      --toggle-off: color-mix(in srgb, var(--color-surface) 70%, white 12%);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-surface) 92%, black 8%);
+      border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-primary) 8%);
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+    .toggle:hover {
+      border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border) 45%);
+      background: color-mix(in srgb, var(--color-surface) 88%, var(--color-primary) 12%);
+    }
+    .toggle-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-display {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      border-radius: 999px;
+      background: var(--toggle-off);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 30px rgba(0,0,0,0.35);
+      transition: background 140ms ease, box-shadow 140ms ease;
+    }
+    .toggle-display::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(145deg,
+        color-mix(in srgb, var(--color-secondary) 95%, white 5%),
+        color-mix(in srgb, var(--color-primary) 65%, white 35%));
+      box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+    .toggle-input:checked + .toggle-display {
+      background: color-mix(in srgb, var(--toggle-on) 88%, white 12%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 26px color-mix(in srgb, var(--color-primary) 35%, transparent);
+    }
+    .toggle-input:checked + .toggle-display::after {
+      transform: translateX(22px);
+      box-shadow: 0 10px 20px color-mix(in srgb, var(--color-primary) 35%, transparent);
+    }
+    .toggle-input:focus-visible + .toggle-display {
+      outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+      outline-offset: 2px;
+    }
+    .toggle-text {
+      font-size: 0.85rem;
+      color: color-mix(in srgb, var(--color-secondary) 75%, var(--color-text) 25%);
+      letter-spacing: 0.02em;
+      font-weight: 600;
+    }
+    /* Neutral overrides to remove blue slate tints */
+    .bg-slate-800 { background-color: #1a1a23 !important; }
+    .bg-slate-900 { background-color: #13131b !important; }
+    .bg-slate-950 { background-color: #0f0f16 !important; }
+    .bg-slate-900\/60 { background-color: rgba(19,19,27,0.6) !important; }
+    .border-slate-800, .border-slate-700 { border-color: #2a2a34 !important; }
+    .border-slate-700\/60 { border-color: rgba(42,42,52,0.6) !important; }
+    .text-slate-400 { color: #d1d1d6 !important; }
+    .text-slate-500 { color: #c4c4cb !important; }
+    .text-slate-200 { color: #f0f0f3 !important; }
+    .text-slate-100 { color: #f8f8fa !important; }
+    .text-slate-300 { color: #e2e2e7 !important; }
+  </style>
+</head>
+<body class="text-slate-100">
+  {% include "nav.html" %}
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none"></div>
+  {% block content %}{% endblock %}
+  <script>
+    const toastContainer = document.getElementById('toast-container');
+    const dismissed = new Set(JSON.parse(sessionStorage.getItem('dismissedToasts') || '[]'));
+    const shown = new Set();
+    const TOAST_DURATION = 7000;
+
+    function persistDismissed() {
+      sessionStorage.setItem('dismissedToasts', JSON.stringify(Array.from(dismissed)));
+    }
+
+    function createToast(notification, id, uidValue) {
+      const key = id || `note-${uidValue ?? Math.random()}`;
+      if (dismissed.has(key) || shown.has(key)) return;
+      shown.add(key);
+      const toast = document.createElement('div');
+      toast.className = "toast-pop pointer-events-auto w-80 p-4 rounded-2xl shadow-xl backdrop-blur";
+      toast.innerHTML = `
+        <div class="flex justify-between items-start gap-2">
+          <div>
+            <p class="text-sm font-semibold text-toast-strong">${notification.title || 'Notification'}</p>
+            <p class="text-xs text-toast-muted">${notification.message || ''}</p>
+          </div>
+          <button aria-label="Dismiss" class="text-toast-muted hover:text-toast-strong text-sm">×</button>
+        </div>
+        <div class="mt-3 h-1 bg-toast-rail rounded-full overflow-hidden">
+          <div class="h-full toast-progress animate-toast-progress"></div>
+        </div>
+      `;
+      const closeBtn = toast.querySelector('button');
+      const removeToast = () => {
+        if (toast.parentElement) toast.parentElement.removeChild(toast);
+        shown.delete(key);
+        dismissed.add(key);
+        persistDismissed();
+      };
+      closeBtn.onclick = () => removeToast();
+      toastContainer.appendChild(toast);
+      setTimeout(removeToast, TOAST_DURATION);
+    }
+
+    function handleSocketMessage(evt) {
+      try {
+        const msg = JSON.parse(evt.data);
+        if (msg.type === 'notification') {
+          const key = `note-${msg.uid ?? msg.title ?? Math.random()}`;
+          createToast(msg, key, msg.uid);
+        } else if (msg.type === 'notifications:init') {
+          (msg.notifications || []).forEach(n => {
+            const key = `note-${n.uid ?? Math.random()}`;
+            createToast(n, key, n.uid);
+          });
+        }
+        window.dispatchEvent(new CustomEvent('ws-message', { detail: msg }));
+      } catch (e) {
+        // ignore parse errors
+      }
+    }
+
+    function connectSocket() {
+      const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const ws = new WebSocket(`${proto}://${window.location.host}/ws`);
+      ws.onmessage = handleSocketMessage;
+      ws.onclose = () => {
+        setTimeout(connectSocket, 2000);
+      };
+    }
+
+    connectSocket();
+  </script>
+  <style>
+    @keyframes toastShrink {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+    .animate-toast-progress {
+      animation: toastShrink 7s linear forwards;
+      transform-origin: left center;
+    }
+    .toast-pop {
+      background: linear-gradient(145deg,
+        color-mix(in srgb, var(--color-surface) 94%, white 4%),
+        color-mix(in srgb, var(--color-surface) 80%, var(--color-primary) 20%));
+      border: 1px solid color-mix(in srgb, var(--color-border) 85%, var(--color-primary) 15%);
+    }
+    .toast-progress {
+      background: linear-gradient(90deg,
+        color-mix(in srgb, var(--color-primary) 85%, white 15%),
+        color-mix(in srgb, var(--color-tertiary) 80%, white 20%));
+    }
+    .bg-toast-rail { background-color: color-mix(in srgb, var(--color-surface) 70%, var(--color-primary) 10%); }
+    .text-toast-strong { color: var(--color-secondary); }
+    .text-toast-muted { color: color-mix(in srgb, var(--color-secondary) 70%, var(--color-text) 30%); }
+  </style>
+</body>
+</html>

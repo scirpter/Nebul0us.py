@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="max-w-4xl mx-auto px-6 py-10 space-y-8">
+  <section class="card p-6 space-y-4">
+    <div>
+      <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Settings</p>
+      <h1 class="text-2xl font-bold accent-text">General</h1>
+      <p class="text-sm text-slate-400">Global toggles for the client.</p>
+    </div>
+    <form class="space-y-4" action="/general/update" method="post">
+      <div class="grid md:grid-cols-2 gap-3">
+        <label class="toggle">
+          <input class="toggle-input" type="checkbox" name="detect_moderators" {% if general.detect_moderators %}checked{% endif %}/>
+          <span class="toggle-display" aria-hidden="true"></span>
+          <span class="toggle-text">Detect Moderators</span>
+        </label>
+        <label class="toggle">
+          <input class="toggle-input" type="checkbox" name="trace_packets" {% if general.trace_packets %}checked{% endif %}/>
+          <span class="toggle-display" aria-hidden="true"></span>
+          <span class="toggle-text">Trace Packets</span>
+        </label>
+        <label class="toggle">
+          <input class="toggle-input" type="checkbox" name="auto_save_config" {% if general.auto_save_config %}checked{% endif %}/>
+          <span class="toggle-display" aria-hidden="true"></span>
+          <span class="toggle-text">Auto-save Config</span>
+        </label>
+      </div>
+      <button class="btn" type="submit">Save</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

@@ -1,7 +1,6 @@
 import json
 import pathlib
 from typing import Any, TypedDict
-import flet as ft
 from game.enums.profile_visibility import PROFILE_VISIBILITY
 
 
@@ -12,6 +11,8 @@ class PerClientSettings(TypedDict):
     profile_visibility: str
     idle_keep_alive_ms: int
     active_keep_alive_ms: int
+    auto_respawn: bool
+    chase_nearest_holes: bool
 
 
 def get_default_client_settings(
@@ -24,21 +25,9 @@ def get_default_client_settings(
         "profile_visibility": PROFILE_VISIBILITY.ONLINE.name,
         "idle_keep_alive_ms": 502,
         "active_keep_alive_ms": 52,
+        "auto_respawn": True,
+        "chase_nearest_holes": True,
     }
-
-
-class Notification(TypedDict):
-    title: str
-    message: str
-
-
-class Theme(TypedDict):
-    background_color_hex: str
-    primary_color_hex: str
-    secondary_color_hex: str
-    tertiary_color_hex: str
-    background_image_url: str
-    background_image_opacity: float
 
 
 class GeneralSettings(TypedDict):
@@ -47,25 +36,26 @@ class GeneralSettings(TypedDict):
     trace_packets: bool
 
 
+class Notification(TypedDict):
+    title: str
+    message: str
+
+
 class Cache(TypedDict):
-    notification_container: ft.Container
-    notification_column: ft.Column
-    background_image_container: ft.Container
-    notifications: list[ft.Container]
+    notifications: list[Notification]
 
 
 class AppStates(TypedDict):
-    license_key: str
     cache: Cache
-    theme: Theme
     bin_text: str
     client_settings: list[PerClientSettings]
     general_settings: GeneralSettings
 
 
 def ensure_integrity(config: dict[str, Any]) -> dict[str, Any]:
-    if not config.get("license_key"):
-        config["license_key"] = ""
+    # drop legacy fields
+    if config.get("license_key") is not None:
+        config.pop("license_key", None)
 
     if not config.get("client_settings"):
         config["client_settings"] = []
@@ -76,26 +66,8 @@ def ensure_integrity(config: dict[str, Any]) -> dict[str, Any]:
     if not config["cache"].get("notifications"):  # type: ignore
         config["cache"]["notifications"] = []
 
-    if not config.get("theme"):
-        config["theme"] = {}
-
-    if not config["theme"].get("background_color_hex"):  # type: ignore
-        config["theme"]["background_color_hex"] = "#171717"
-
-    if not config["theme"].get("primary_color_hex"):  # type: ignore
-        config["theme"]["primary_color_hex"] = "#ffffff"
-
-    if not config["theme"].get("secondary_color_hex"):  # type: ignore
-        config["theme"]["secondary_color_hex"] = "#7c4dff"
-
-    if not config["theme"].get("tertiary_color_hex"):  # type: ignore
-        config["theme"]["tertiary_color_hex"] = "#7c4dff"
-
-    if not config["theme"].get("background_image_url"):  # type: ignore
-        config["theme"]["background_image_url"] = ""
-
-    if not config["theme"].get("background_image_opacity"):  # type: ignore
-        config["theme"]["background_image_opacity"] = 1
+    if config.get("theme"):
+        config.pop("theme", None)
 
     if not config.get("bin_text"):
         config["bin_text"] = (
@@ -128,6 +100,12 @@ def ensure_client_config_integrity(
 
     if not client_settings.get("profile_visibility"):
         client_settings["profile_visibility"] = PROFILE_VISIBILITY.ONLINE.name
+
+    if client_settings.get("auto_respawn") is None:
+        client_settings["auto_respawn"] = True
+
+    if client_settings.get("chase_nearest_holes") is None:
+        client_settings["chase_nearest_holes"] = True
 
     return client_settings
 

@@ -1,186 +1,93 @@
+from __future__ import annotations
+
 from typing import Any
-import flet as ft
+
+from nicegui import ui
+
 from base.app import App
 from game.api import CoinPurchase, DeleteAccount
+from ui.components.cards import glass_card
 
 
-class AbuseTab(ft.Tab):
-    def __init__(self, app: App) -> None:
-        self.app: App = app
-        self.sign_in_token_ref = ft.Ref[ft.TextField]()
-        self.send_plasma_target_ref = ft.Ref[ft.TextField]()
-        self.send_plasma_amount_ref = ft.Ref[ft.TextField]()
+def render(app: App) -> None:
+    with glass_card():
+        ui.label("Account Actions").classes("text-lg font-semibold text-slate-100")
+        ui.label("Dangerous API calls for moderation testing. Use responsibly.").classes("text-sm text-amber-300")
+        token_input = ui.input(label="Sign-in Token", placeholder="Paste token").props("type=password").classes(
+            "w-full md:w-[420px]"
+        )
 
-        super().__init__(  # type: ignore
-            text="Abuse",
-            icon=ft.Icons.WARNING,
-            content=ft.Container(
-                alignment=ft.alignment.top_left,
-                content=ft.Column(
-                    [
-                        ft.Container(
-                            ft.Column(
-                                [
-                                    ft.Text(
-                                        "Sign-in Token",
-                                        style=ft.TextStyle(
-                                            20,
-                                            weight=ft.FontWeight.BOLD,
-                                            decoration=ft.TextDecoration.UNDERLINE,
-                                        ),
-                                    ),
-                                    ft.TextField(
-                                        label="Token here",
-                                        border_color=ft.Colors.GREY,
-                                        ref=self.sign_in_token_ref,
-                                    ),
-                                ]
-                            ),
-                            margin=ft.Margin(0, 10, 0, 80),
-                        ),
-                        ft.Column(
-                            [
-                                ft.TextButton(
-                                    icon=ft.Icons.DELETE_FOREVER_OUTLINED,
-                                    icon_color=ft.Colors.RED,
-                                    text="Delete Account",
-                                    on_click=self.on_delete_account,
-                                ),
-                                ft.Row(
-                                    [
-                                        ft.TextButton(
-                                            icon=ft.Icons.PERSON_OFF,
-                                            icon_color=ft.Colors.RED,
-                                            text="Ban Account Within 1 Day",
-                                        ),
-                                        ft.Dropdown(
-                                            label="Method",
-                                            options=[
-                                                ft.dropdown.Option(
-                                                    text="Xbox 360 Voice Message"
-                                                ),
-                                                ft.dropdown.Option(
-                                                    text="Actor"
-                                                ),
-                                            ],
-                                            border_color=ft.Colors.GREY,
-                                        ),
-                                    ]
-                                ),
-                            ]
-                        ),
-                        ft.TextButton(
-                            icon=ft.Icons.MONEY_OFF,
-                            icon_color=ft.Colors.RED,
-                            text="Waste All Plasma",
-                        ),
-                        ft.Row(
-                            [
-                                ft.TextButton(
-                                    icon=ft.Icons.GROUP_OFF,
-                                    icon_color=ft.Colors.RED,
-                                    text="Destroy Clan",
-                                    on_click=lambda x: app.notify(  # type: ignore
-                                        "Abuse",
-                                        "Action not implemented",
-                                    ),
-                                ),
-                                ft.Dropdown(
-                                    label="Action",
-                                    options=[
-                                        ft.dropdown.Option(
-                                            text="Kick All Possible Members"
-                                        ),
-                                        ft.dropdown.Option(
-                                            text="Ban All Possible Members"
-                                        ),
-                                        ft.dropdown.Option(text="Change Owner"),
-                                        ft.dropdown.Option(text="Delete"),
-                                    ],
-                                    border_color=ft.Colors.GREY,
-                                ),
-                            ]
-                        ),
-                        ft.Row(
-                            [
-                                ft.TextButton(
-                                    icon=ft.Icons.MONEY,
-                                    icon_color=ft.Colors.RED,
-                                    text="Send Plasma",
-                                    on_click=self.on_send_plasma,
-                                ),
-                                ft.TextField(
-                                    label="Target ID",
-                                    border_color=ft.Colors.GREY,
-                                    ref=self.send_plasma_target_ref,
-                                    value="12409385",
-                                ),
-                                ft.TextField(
-                                    label="Price",
-                                    border_color=ft.Colors.GREY,
-                                    ref=self.send_plasma_amount_ref,
-                                    value="100",
-                                ),
-                            ]
-                        ),
-                    ]
-                ),
+        ui.button(
+            "Delete Account",
+            icon="delete_forever",
+            on_click=lambda: _delete_account(app, token_input.value or ""),
+        ).classes("bg-rose-500/80 text-slate-100 w-fit")
+
+    with glass_card():
+        ui.label("Clan Tools").classes("text-lg font-semibold text-slate-100")
+        ui.label("Placeholder actions for clan administration.").classes("text-sm text-slate-400")
+        ui.button(
+            "Destroy Clan",
+            icon="group_off",
+            on_click=lambda: app.notify("Abuse", "Action not implemented"),
+        ).classes("bg-slate-800 text-slate-200 w-fit")
+
+    with glass_card():
+        ui.label("Plasma Transfer").classes("text-lg font-semibold text-slate-100")
+        ui.label(
+            "Send plasma to another account. Requires a valid sign-in token with sufficient balance."
+        ).classes("text-sm text-slate-400")
+        with ui.row().classes("gap-4 flex-wrap"):
+            plasma_target = ui.input(label="Target Account ID", value="12409385").classes("w-full md:w-64")
+            plasma_amount = ui.input(label="Plasma Amount", value="100").classes("w-full md:w-64")
+        ui.button(
+            "Send Plasma",
+            icon="paid",
+            on_click=lambda: _send_plasma(
+                app,
+                token_input.value or "",
+                plasma_target.value or "",
+                plasma_amount.value or "",
             ),
-        )
+        ).classes("bg-emerald-500/80 hover:bg-emerald-400 text-slate-900 w-fit")
 
-    def on_delete_account(self, e: ft.ControlEvent) -> None:
-        token: str | None = self.sign_in_token_ref.current.value
-        if not token:
-            self.app.notify("Abuse", "Invalid sign-in token")
-            return
 
-        response: dict[Any, Any] | Exception = DeleteAccount(token).execute()
+def _delete_account(app: App, token: str) -> None:
+    if not token:
+        app.notify("Abuse", "Invalid sign-in token")
+        return
+    response: dict[str, Any] | Exception = DeleteAccount(token).execute()
+    if isinstance(response, Exception):
+        app.notify("Abuse", f"Failed to delete account: {response}")
+        return
+    if response.get("Error"):
+        app.notify("Abuse", f"Failed to delete account: {response['Error']}")
+        return
+    app.notify("Abuse", "Account deleted")
 
-        if isinstance(response, Exception):
-            self.app.notify("Abuse", f"Failed to delete account: {response}")
-            return
 
-        if response.get("Error"):
-            self.app.notify(
-                "Abuse", f"Failed to delete account: {response['Error']}"
-            )
-            return
+def _send_plasma(app: App, token: str, target: str, amount: str) -> None:
+    if not token:
+        app.notify("Abuse", "Invalid sign-in token")
+        return
+    if not target or not target.isdigit():
+        app.notify("Abuse", "Invalid target account ID")
+        return
+    if not amount or not amount.isdigit():
+        app.notify("Abuse", "Invalid plasma amount")
+        return
 
-        self.app.notify("Abuse", "Account deleted")
+    response: dict[str, Any] | Exception = CoinPurchase(
+        token, "GIVE_PLASMA", int(target), int(amount)
+    ).execute()
 
-    def on_send_plasma(self, e: ft.ControlEvent) -> None:
-        target_id: str | None = self.send_plasma_target_ref.current.value
-        if not target_id or not target_id.isdigit():
-            self.app.notify("Abuse", "Invalid target account ID")
-            return
+    if isinstance(response, Exception):
+        app.notify("Abuse", f"Failed to send plasma: {response}")
+        return
+    if response.get("Error"):
+        app.notify("Abuse", f"Failed to send plasma: {response['Error']}")
+        return
 
-        amount: str | None = self.send_plasma_amount_ref.current.value
-        if not amount or not amount.isdigit():
-            self.app.notify("Abuse", "Invalid plasma amount")
-            return
-
-        ticket: str | None = self.sign_in_token_ref.current.value
-        if not ticket:
-            self.app.notify("Abuse", "Invalid sign-in token")
-            return
-
-        response: dict[Any, Any] | Exception = CoinPurchase(
-            ticket, "GIVE_PLASMA", int(target_id), int(amount)
-        ).execute()
-
-        if isinstance(response, Exception):
-            self.app.notify("Abuse", f"Failed to send plasma: {response}")
-            return
-
-        if response.get("Error"):
-            self.app.notify(
-                "Abuse", f"Failed to send plasma: {response['Error']}"
-            )
-            return
-
-        coins_spent: int = response.get("CoinsSpent", 0)
-        coins_remaining: int = response.get("CoinsRemaining", 0)
-        self.app.notify(
-            "API",
-            f"Sent {coins_spent} plasma to {target_id}, {coins_remaining} remaining",
-        )
+    spent = response.get("CoinsSpent", 0)
+    remaining = response.get("CoinsRemaining", 0)
+    app.notify("API", f"Sent {spent} plasma to {target}. {remaining} remaining.")

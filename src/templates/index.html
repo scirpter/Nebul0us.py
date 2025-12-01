@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+  <section class="card p-8 space-y-4">
+    <div class="flex flex-wrap justify-between items-start gap-4">
+      <div class="space-y-2">
+        <h1 class="text-4xl font-extrabold accent-text leading-tight">2oh</h1>
+        <p class="text-sm uppercase tracking-[0.35em] text-slate-400">Nebulous.io Bot Console</p>
+        <p class="text-sm text-slate-400">Operate, monitor, and tune your fleet with a pastel dark cockpit.</p>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="flex gap-2 flex-wrap justify-end">
+          <span class="chip">Clients: {{ summary.connected_clients }} / {{ summary.total_clients }}</span>
+          <span class="chip">Notifications: {{ summary.notifications|length }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid gap-6 lg:grid-cols-3">
+    <div class="card p-6 space-y-4 lg:col-span-2">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm uppercase tracking-[0.25em] text-slate-500">Live Feed</p>
+          <h2 class="text-2xl font-semibold accent-text">Developer Logs</h2>
+        </div>
+      </div>
+      <div class="space-y-3 max-h-[520px] overflow-y-auto pr-2">
+        {% if devlogs %}
+          {% for log in devlogs %}
+            <div class="p-3 rounded-xl border border-slate-700/60 bg-slate-900/60 flex items-start gap-3">
+              <div class="text-xs text-slate-500 w-36 shrink-0">{{ log.timestamp }}</div>
+              <div class="text-sm text-slate-100">{{ log.message }}</div>
+              <span class="ml-auto text-[10px] uppercase tracking-[0.2em] text-slate-400">{{ log.importance }}</span>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-slate-500 text-sm">No logs yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card p-6 space-y-4">
+      <p class="text-sm uppercase tracking-[0.25em] text-slate-500">Recent Notifications</p>
+      <h2 class="text-xl font-semibold accent-text">Inbox</h2>
+      <div class="space-y-3 max-h-[520px] overflow-y-auto pr-2">
+        {% if summary.notifications %}
+          {% for note in summary.notifications|reverse %}
+            <div class="p-4 rounded-xl border border-slate-700/60 bg-slate-900/60 space-y-1">
+              <p class="text-sm font-semibold text-slate-100">{{ note.title }}</p>
+              <p class="text-xs text-slate-400">{{ note.message }}</p>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-slate-500 text-sm">No notifications yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

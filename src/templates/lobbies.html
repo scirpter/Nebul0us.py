@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+  <section class="card p-6 space-y-4">
+    <div class="flex justify-between items-start flex-wrap gap-3">
+      <div>
+        <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Sessions</p>
+        <h1 class="text-2xl font-bold accent-text">Lobbies</h1>
+        <p class="text-sm text-slate-400">Join or spectate using player ID or lobby name.</p>
+      </div>
+    </div>
+    <form class="grid gap-3 md:grid-cols-4" action="/lobbies/join" method="post">
+      <select name="target" class="px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm md:col-span-2">
+        {% for key, val in target_options.items() %}
+          <option value="{{ key }}">{{ val }}</option>
+        {% endfor %}
+      </select>
+      <input name="player_id" placeholder="Player ID" class="px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm" />
+      <input name="lobby_name" placeholder="Lobby Name" class="px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm" />
+      <label class="toggle md:col-span-2">
+        <input class="toggle-input" type="checkbox" name="spectate" />
+        <span class="toggle-display" aria-hidden="true"></span>
+        <span class="toggle-text">Spectate</span>
+      </label>
+      <div class="flex gap-2 md:col-span-2">
+        <button class="btn" type="submit">Go</button>
+      </div>
+    </form>
+
+    <div class="space-y-3">
+      <h2 class="text-sm uppercase tracking-[0.3em] text-slate-500">Private Games</h2>
+      {% if private_client and private_client.private_search_list.entries %}
+        {% for entry in private_client.private_search_list.entries %}
+          <div class="p-3 rounded-xl border border-slate-700/60 bg-slate-900/60">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-semibold text-slate-100">{{ entry.name }}</p>
+                <p class="text-xs text-slate-400 uppercase tracking-[0.25em]">{{ entry.players_in_lobby }}/{{ entry.max_players }} players · {{ entry.game_mode.name if entry.game_mode else entry.game_mode }}</p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-slate-500 text-sm">No private games data available.</p>
+      {% endif %}
+    </div>
+  </section>
+</main>
+{% endblock %}

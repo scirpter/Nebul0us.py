@@ -1,482 +1,343 @@
-import flet as ft
+﻿from __future__ import annotations
+
+from typing import Callable
+
+from nicegui import events, ui
+
 from base.app import App
+from game.enums import REGION
 from game.enums.game_mode import GAME_MODE
 from game.models.client.client import Client
-from game.enums import REGION
+from ui.components.badges import status_badge
+from ui.components.cards import glass_card
 
 
-class BotsTab(ft.Tab):
-    def __init__(self, app: App) -> None:
-        self.app: App = app
-        self.logs: list[BotsTab] = []
-        super().__init__(  # type: ignore
-            text="Bots", content=self.generate_content(), icon=ft.Icons.ANDROID
-        )
+def render(app: App) -> None:
+    status_updaters: list[Callable[[], None]] = []
 
-    def generate_content(self) -> ft.Column:
-        return ft.Column(
-            [
-                ft.Container(
-                    ft.Column(
-                        [
-                            ft.Row(
-                                [
-                                    ft.TextButton(
-                                        text="Add Bot",
-                                        icon_color=ft.Colors.GREEN,
-                                        icon=ft.Icons.ADD,
-                                        on_click=self.on_add_bot,
-                                    ),
-                                    ft.TextButton(
-                                        text="Disconnect all bots",
-                                        icon_color=ft.Colors.RED,
-                                        icon=ft.Icons.CLEAR_ALL,
-                                        on_click=self.on_kill_all_bots,
-                                    ),
-                                ]
-                            ),
-                        ]
-                    ),
-                    margin=ft.Margin(0, 2, 0, 0),
-                ),
-                *self.generate_bot_rows(),
-            ],
-            scroll=ft.ScrollMode.ALWAYS,
-        )
-
-    def generate_bot_rows(self) -> list[ft.Row]:
-        rows: list[ft.Row] = []
-        for client in self.app.clients:
-            new_bot_name_ref = ft.Ref[ft.TextField]()
-            active_keep_alive_ms_text = ft.Ref[ft.Text]()
-            idle_keep_alive_ms_text = ft.Ref[ft.Text]()
-
-            region_selection = ft.Ref[ft.Dropdown]()
-            gamemode_selection = ft.Ref[ft.Dropdown]()
-            is_mayhem_checkbox = ft.Ref[ft.Switch]()
-            is_connect_in_private_search_checkbox = ft.Ref[ft.Switch]()
-
-            def validate_bot_name(
-                e: ft.ControlEvent, client: Client = client
-            ) -> None:
-                name: str = new_bot_name_ref.current.value  # type: ignore
-                if name == client.client_data.name:
-                    self.app.notify("Session", "No changes made. :?")
-                    return
-                elif any(
-                    client.client_data.name == name
-                    for client in self.app.clients
-                ):
-                    self.app.notify(
-                        "Session", "Bot with this name already exists"
-                    )
-                    return
-                elif not name:
-                    self.app.notify("Session", "Bot name can't be empty")
-                    return
-                elif len(name) > 12:
-                    self.app.notify(
-                        "Session", "Bot name can't be longer than 12 characters"
-                    )
-                    return
-                client.client_data.name = name
-                client.settings["player_name"] = name
-                self.update()
-                self.app.notify("Session", f"Set bot name to {name}")
-
-            def on_goto_closest_holes_checkbox(
-                e: ft.ControlEvent, client: Client = client
-            ) -> None:
-                client.options_data.chase_nearest_holes = e.control.value  # type: ignore
-
-            def on_auto_respawn_checkbox(
-                e: ft.ControlEvent, client: Client = client
-            ) -> None:
-                client.options_data.auto_respawn = e.control.value  # type: ignore
-
-            def on_keep_alive_active_slider(
-                e: ft.ControlEvent, client: Client = client
-            ) -> None:
-                client.settings["active_keep_alive_ms"] = int(e.control.value)  # type: ignore
-                active_keep_alive_ms_text.current.value = f"Active Keep Alive ({client.settings['active_keep_alive_ms']} MS)"
-                self.update()
-
-            def on_keep_alive_idle_slider(
-                e: ft.ControlEvent, client: Client = client
-            ) -> None:
-                client.settings["idle_keep_alive_ms"] = int(e.control.value)  # type: ignore
-                idle_keep_alive_ms_text.current.value = f"Idle Keep Alive ({client.settings['idle_keep_alive_ms']} MS)"
-                self.update()
-
-            def connect(e: ft.ControlEvent, client: Client = client) -> None:
-                if client.is_connected:
-                    self.app.notify("Session", "Bot is already connected. :|")
-                    return
-                if not region_selection.current.value:
-                    self.app.notify(
-                        "Session", "Please select a proper region. :?"
-                    )
-                    return
-
-                r = client.connect(
-                    region=region_selection.current.value,
-                    mayhem=is_mayhem_checkbox.current.value,  # type: ignore
-                    connect_in_private_search=is_connect_in_private_search_checkbox.current.value,  # type: ignore
-                    game_mode=GAME_MODE.from_string(
-                        gamemode_selection.current.value
-                        or GAME_MODE.FFA_ULTRA.name
-                    ),  # type: ignore
-                )
-                if isinstance(r, Exception):
-                    self.app.notify(
-                        "Connection Error", f"Failed to connect: {r}"
-                    )
-                    return
-
-            def start_playing(
-                e: ft.ControlEvent, client: Client = client
-            ) -> None:
-                if not client.is_connected:
-                    self.app.notify(
-                        "Session",
-                        f"{client.client_data.name} is not connected. :|",
-                    )
-                    return
-                client.start_playing()
-                self.app.notify(
-                    "Player", f"{client.client_data.name} sent play request"
-                )
-
-            def disconnect(e: ft.ControlEvent, client: Client = client) -> None:
-                if not client.is_connected:
-                    self.app.notify("Session", "Bot is not connected. :|")
-                    return
-                client.disconnect()
-                self.app.notify(
-                    "Lobby",
-                    f"{client.client_data.name} disconnected from the surface",
-                )
-
-            def copy_token(e: ft.ControlEvent, client: Client = client) -> None:
-                self.app.page.set_clipboard(client.client_data.login_ticket)
-                self.app.notify("Info", "Copied bot token to clipboard")
-
-            rows.append(
-                ft.Row(
-                    [
-                        ft.Container(
-                            padding=ft.padding.all(9),
-                            content=ft.Column(
-                                [
-                                    ft.Row(
-                                        [
-                                            ft.Dropdown(
-                                                label="Region",
-                                                options=[
-                                                    ft.dropdown.Option(
-                                                        text=region
-                                                    )
-                                                    for region in REGION.all()
-                                                ],
-                                                border_color=ft.Colors.GREY,
-                                                ref=region_selection,
-                                                value=REGION.EU.name,
-                                            ),
-                                            ft.Dropdown(
-                                                label="Game Mode",
-                                                options=[
-                                                    ft.dropdown.Option(
-                                                        text=mode
-                                                    )
-                                                    for mode in GAME_MODE.all()
-                                                ],
-                                                border_color=ft.Colors.GREY,
-                                                ref=gamemode_selection,
-                                                value=GAME_MODE.FFA_ULTRA.name,
-                                            ),
-                                            ft.Checkbox(
-                                                label="Mayhem",
-                                                ref=is_mayhem_checkbox,
-                                                value=False,
-                                            ),
-                                            ft.Checkbox(
-                                                label="Connect in private game search",
-                                                ref=is_connect_in_private_search_checkbox,
-                                                value=False,
-                                            ),
-                                            ft.Checkbox(
-                                                label="Autorespawn",
-                                                value=True,
-                                                on_change=on_auto_respawn_checkbox,
-                                            ),
-                                            ft.Checkbox(
-                                                label="Goto Closest Holes",
-                                                value=False,
-                                                on_change=on_goto_closest_holes_checkbox,
-                                            ),
-                                        ]
-                                    ),
-                                    ft.Row(
-                                        [
-                                            ft.TextField(
-                                                value=client.client_data.name,
-                                                text_style=ft.TextStyle(
-                                                    weight=ft.FontWeight.BOLD
-                                                ),
-                                                ref=new_bot_name_ref,
-                                                label="Bot Name",
-                                            ),
-                                            ft.TextButton(
-                                                "Validate & Apply",
-                                                on_click=validate_bot_name,
-                                            ),
-                                            ft.TextButton(
-                                                "Delete Bot",
-                                                on_click=self.delete_bot,
-                                                key=str(client.client_data.uid),
-                                            ),
-                                        ],
-                                    ),
-                                    ft.Row(
-                                        [
-                                            ft.Column(
-                                                [
-                                                    ft.Row(
-                                                        [
-                                                            ft.Text(
-                                                                f"Active Keep Alive ({client.settings['active_keep_alive_ms']} MS)",
-                                                                weight=ft.FontWeight.BOLD,
-                                                                ref=active_keep_alive_ms_text,
-                                                            ),
-                                                            ft.Icon(
-                                                                ft.Icons.QUESTION_MARK_OUTLINED,
-                                                                tooltip="Recommended: 52MS",
-                                                            ),
-                                                        ]
-                                                    ),
-                                                    ft.Slider(
-                                                        max=600,
-                                                        value=client.settings[
-                                                            "active_keep_alive_ms"
-                                                        ],
-                                                        on_change=on_keep_alive_active_slider,
-                                                    ),
-                                                ]
-                                            ),
-                                            ft.Column(
-                                                [
-                                                    ft.Row(
-                                                        [
-                                                            ft.Text(
-                                                                f"Idle Keep Alive ({client.settings['idle_keep_alive_ms']} MS)",
-                                                                weight=ft.FontWeight.BOLD,
-                                                                ref=idle_keep_alive_ms_text,
-                                                            ),
-                                                            ft.Icon(
-                                                                ft.Icons.QUESTION_MARK_OUTLINED,
-                                                                tooltip="Recommended: 502MS",
-                                                            ),
-                                                        ]
-                                                    ),
-                                                    ft.Slider(
-                                                        max=600,
-                                                        value=client.settings[
-                                                            "idle_keep_alive_ms"
-                                                        ],
-                                                        on_change=on_keep_alive_idle_slider,
-                                                    ),
-                                                ]
-                                            ),
-                                        ]
-                                    ),
-                                    ft.Row(
-                                        [
-                                            ft.TextButton(
-                                                "Start Playing",
-                                                icon=ft.Icons.PLAY_ARROW,
-                                                icon_color=ft.Colors.GREEN,
-                                                on_click=start_playing,
-                                            ),
-                                            ft.TextButton(
-                                                "Connect",
-                                                icon=ft.Icons.WIFI,
-                                                icon_color=ft.Colors.AMBER,
-                                                on_click=connect,
-                                            ),
-                                            ft.TextButton(
-                                                "Disconnect",
-                                                icon=ft.Icons.DANGEROUS,
-                                                on_click=disconnect,
-                                            ),
-                                            ft.TextButton(
-                                                "Copy Token",
-                                                icon=ft.Icons.COPY,
-                                                on_click=copy_token,
-                                            ),
-                                        ]
-                                    ),
-                                ],
-                            ),
-                            margin=ft.Margin(0, 2, 0, 0),
-                            border=ft.Border(
-                                ft.BorderSide(2, ft.Colors.GREY_700),
-                                ft.BorderSide(2, ft.Colors.GREY_700),
-                                ft.BorderSide(2, ft.Colors.GREY_700),
-                                ft.BorderSide(2, ft.Colors.GREY_700),
-                            ),
-                            border_radius=ft.BorderRadius(10, 10, 10, 10),
-                            width=(self.app.page.width or 20) - 20,
-                            height=(self.app.page.height or 1.4) / 1.4,
-                            alignment=ft.alignment.top_left,
-                        )
-                    ],
-                    scroll=ft.ScrollMode.ALWAYS,
-                )
+    header = ui.row().classes("justify-between items-center w-full")
+    with header:
+        titles = ui.column().classes("gap-1")
+        with titles:
+            ui.label("Bot Fleet").classes("text-2xl font-semibold text-slate-100")
+            summary_label = ui.label("").classes("text-sm text-slate-400")
+        actions = ui.row().classes("gap-3 items-center")
+        with actions:
+            ui.button("Add Bot", icon="add", on_click=lambda: _open_add_bot_dialog(app, refresh)).classes(
+                "bg-violet-500/80 hover:bg-violet-400 text-slate-100"
+            )
+            ui.button("Disconnect All", icon="power_settings_new", on_click=lambda: _disconnect_all(app, refresh)).classes(
+                "bg-slate-800 hover:bg-slate-700 text-slate-200"
             )
 
-        return rows
+    cards_container = ui.element("div").classes(
+        "grid grid-cols-1 gap-6 w-full xl:grid-cols-2 2xl:grid-cols-3"
+    )
 
-    def delete_bot(self, e: ft.ControlEvent) -> None:
-        uid: int = int(e.control.key)  # type: ignore
-        client: Client | None = next(
-            (
-                client
-                for client in self.app.clients
-                if client.client_data.uid == uid
-            ),
-            None,
-        )
-        if client is None:
-            self.app.notify("Session", f"Account with ID {uid} not found")
-            self.content = self.generate_content()
-            self.update()
+    def update_summary() -> None:
+        total = len(app.clients)
+        connected = sum(1 for client in app.clients if client.is_connected)
+        summary_label.set_text(f"{connected} / {total} connected")
+
+    def refresh() -> None:
+        cards_container.clear()
+        status_updaters.clear()
+        if not app.clients:
+            with cards_container:
+                card = glass_card()
+                with card:
+                    ui.label("No bots configured yet.").classes("text-sm text-slate-400")
+            update_summary()
             return
 
-        self.app.clients.remove(client)
-        for setting in self.app.states["client_settings"]:
-            if setting["client_uid"] == uid:
-                self.app.states["client_settings"].remove(setting)
-                break
-        self.content = self.generate_content()
-        self.update()
-        self.app.notify("Session", f"Deleted {client.client_data.name}")
+        for client in app.clients:
+            _build_bot_card(app, client, cards_container, status_updaters, refresh)
+        update_summary()
 
-    def on_add_bot(self, e: ft.ControlEvent) -> None:
-        bot_name = ft.Ref[ft.TextField]()
-        bot_ticket = ft.Ref[ft.TextField]()
+    refresh()
+    ui.timer(1.0, lambda: [_update() for _update in status_updaters])
 
-        def fetch_local_token(e: ft.ControlEvent) -> None:
-            bot_ticket.current.value = "THIS FEATURE IS NOT AVAILABLE YET."
-            bot_ticket.current.update()
 
-        def dismiss(e: ft.ControlEvent) -> None:
-            dlg_modal.open = False
-            self.app.page.update()  # type: ignore
+def _build_bot_card(
+    app: App,
+    client: Client,
+    container: ui.element,
+    status_updaters: list[Callable[[], None]],
+    refresh_callback: Callable[[], None],
+) -> None:
+    regions = REGION.all()
+    modes = GAME_MODE.all()
 
-        def confirm(e: ft.ControlEvent) -> None:
-            if not bot_name.current.value:
-                self.app.notify("Session", "Bot name can't be empty")
-                return
-            elif not bot_ticket.current.value:
-                self.app.notify("Session", "Bot ticket can't be empty")
-                return
-            name: str = bot_name.current.value
-            if any(
-                client.client_data.name == name for client in self.app.clients
-            ):
-                self.app.notify(
-                    "Failure",
-                    f"Bot with name {bot_name.current.value} already exists",
+    with container:
+        card = glass_card()
+        with card:
+            header = ui.row().classes("justify-between items-start")
+            with header:
+                meta = ui.column().classes("gap-1")
+                with meta:
+                    ui.label(client.client_data.name).classes("text-xl font-semibold text-slate-100")
+                    ui.label(f"UID {client.client_data.uid}").classes("text-xs uppercase tracking-[0.3em] text-slate-500")
+                status_chip = status_badge("Offline", kind="danger")
+
+            def update_status() -> None:
+                if client.is_connected:
+                    status_chip.set_text("Connected")
+                    status_chip.classes(
+                        replace="px-2 py-1 rounded-full text-xs font-semibold tracking-wide uppercase "
+                        "bg-emerald-500/20 text-emerald-200 border border-emerald-400/40"
+                    )
+                else:
+                    status_chip.set_text("Offline")
+                    status_chip.classes(
+                        replace="px-2 py-1 rounded-full text-xs font-semibold tracking-wide uppercase "
+                        "bg-rose-500/25 text-rose-200 border border-rose-400/50"
+                    )
+
+            update_status()
+            status_updaters.append(update_status)
+
+            with ui.element("div").classes("grid grid-cols-1 lg:grid-cols-2 gap-4 w-full"):
+                region_value = getattr(client.client_data, "server_region", None) or REGION.EU.name
+                stored_mode = client.settings.get("game_mode", GAME_MODE.FFA_ULTRA.name)
+                region_select = ui.select(
+                    regions,
+                    value=region_value,
+                    label="Region",
+                ).classes("w-full")
+                mode_select = ui.select(
+                    modes,
+                    value=stored_mode,
+                    label="Game Mode",
+                ).classes("w-full")
+
+            with ui.row().classes("gap-4 flex-wrap items-center"):
+                mayhem_toggle = ui.switch("Mayhem", value=False)
+                private_toggle = ui.switch("Private Search", value=False)
+                auto_respawn_toggle = ui.switch(
+                    "Auto Respawn", value=client.options_data.auto_respawn
                 )
-                return
-            elif any(
-                client.client_data.login_ticket == bot_ticket.current.value
-                for client in self.app.clients
-            ):
-                self.app.notify(
-                    "Failure",
-                    "Bot with this ticket already exists",
+                chase_toggle = ui.switch(
+                    "Chase Closest Holes", value=client.options_data.chase_nearest_holes
                 )
-                return
 
-            if (
-                not bot_ticket.current.value.endswith("=")
-                or "," not in bot_ticket.current.value
-            ):
-                self.app.notify(
-                    "Failure",
-                    "Invalid ticket format",
-                )
-                return
+            with ui.column().classes("gap-4"):
+                active_label = ui.label("").classes("text-xs text-slate-400 uppercase tracking-[0.3em]")
+                active_slider = ui.slider(min=20, max=600, value=client.settings["active_keep_alive_ms"])
+                idle_label = ui.label("").classes("text-xs text-slate-400 uppercase tracking-[0.3em]")
+                idle_slider = ui.slider(min=200, max=1200, value=client.settings["idle_keep_alive_ms"])
 
-            account_id: str = bot_ticket.current.value.split(",")[0]
-            if not account_id.isdigit():
-                self.app.notify(
-                    "Failure",
-                    "Invalid ticket format",
-                )
-                return
+            def sync_keep_alive_labels() -> None:
+                active_label.set_text(f"Active Keep Alive â€¢ {client.settings['active_keep_alive_ms']} ms")
+                idle_label.set_text(f"Idle Keep Alive â€¢ {client.settings['idle_keep_alive_ms']} ms")
 
-            dlg_modal.open = False
-            self.app.page.update()  # type: ignore
+            sync_keep_alive_labels()
 
-            client = Client(
-                self.app, int(account_id), name, bot_ticket.current.value
-            )
-            self.app.clients.append(client)
-            self.content = self.generate_content()
-            self.update()
-            self.app.notify("Session", f"Added {client.client_data.name}")
+            with ui.row().classes("gap-3 flex-wrap"):
+                name_input = ui.input(label="Bot Name", value=client.client_data.name).classes("flex-1")
+                ui.button(
+                    "Apply Name",
+                    icon="check",
+                    on_click=lambda: _rename_bot(app, client, name_input.value or "", refresh_callback),
+                ).classes("bg-emerald-500/80 hover:bg-emerald-400 text-slate-900")
 
-        dlg_modal = ft.AlertDialog(
-            modal=True,
-            title=ft.Text("Configure your bot"),
-            content=ft.Column(
-                [
-                    ft.Text(
-                        "⚠️ Running more than 4 clients will require you to use proxies or VPN. Max 4 clients per IP ⚠️",
-                        style=ft.TextStyle(weight=ft.FontWeight.BOLD),
-                        color=ft.Colors.GREY_700,
+            with ui.row().classes("gap-3 flex-wrap"):
+                ui.button(
+                    "Start Playing",
+                    icon="play_arrow",
+                    on_click=lambda: _start_playing(app, client),
+                ).classes("bg-emerald-500/80 hover:bg-emerald-400 text-slate-900")
+                ui.button(
+                    "Connect",
+                    icon="bolt",
+                    on_click=lambda: _connect_bot(
+                        app,
+                        client,
+                        region_select.value,
+                        mode_select.value,
+                        bool(mayhem_toggle.value),
+                        bool(private_toggle.value),
                     ),
-                    ft.TextField(
-                        label="Bot Name",
-                        border_color=ft.Colors.GREY_700,
-                        ref=bot_name,
-                    ),
-                    ft.Row(
-                        [
-                            ft.TextField(
-                                label="Bot Ticket",
-                                border_color=ft.Colors.GREY_700,
-                                ref=bot_ticket,
-                            ),
-                            ft.TextButton(
-                                text="Fetch From Game Files (root)",
-                                icon=ft.Icons.REFRESH,
-                                icon_color=ft.Colors.AMBER,
-                                on_click=fetch_local_token,
-                            ),
-                        ]
-                    ),
-                ]
-            ),
-            actions=[
-                ft.TextButton("Confirm", on_click=confirm),
-                ft.TextButton("Cancel", on_click=dismiss),
-            ],
-            actions_alignment=ft.MainAxisAlignment.END,
-            bgcolor=ft.Colors.BLACK,
-        )
+                ).classes("bg-cyan-500/80 hover:bg-cyan-400 text-slate-900")
+                ui.button(
+                    "Disconnect",
+                    icon="link_off",
+                    on_click=lambda: _disconnect_bot(app, client),
+                ).classes("bg-slate-800 hover:bg-slate-700 text-slate-200")
+                ui.button(
+                    "Copy Token",
+                    icon="content_copy",
+                    on_click=lambda: _copy_ticket(app, client),
+                ).classes("bg-slate-800 hover:bg-slate-700 text-slate-200")
+                ui.button(
+                    "Delete",
+                    icon="delete",
+                    on_click=lambda: _delete_bot(app, client, refresh_callback),
+                ).classes("bg-rose-500/80 hover:bg-rose-500 text-slate-100")
 
-        self.page.open(dlg_modal)
+            def on_autorespawn_change(_: events.ValueChangeEventArguments) -> None:
+                client.options_data.auto_respawn = bool(auto_respawn_toggle.value)
 
-    def on_kill_all_bots(self, e: ft.ControlEvent) -> None:
-        ct: int = len(self.app.clients)
-        self.app.notify("Session", f"Killing {ct} bot(s)...")
-        for client in self.app.clients:
+            def on_chase_change(_: events.ValueChangeEventArguments) -> None:
+                client.options_data.chase_nearest_holes = bool(chase_toggle.value)
+
+            def on_active_change(e: events.ValueChangeEventArguments) -> None:
+                client.settings["active_keep_alive_ms"] = int(e.value)
+                sync_keep_alive_labels()
+
+            def on_idle_change(e: events.ValueChangeEventArguments) -> None:
+                client.settings["idle_keep_alive_ms"] = int(e.value)
+                sync_keep_alive_labels()
+
+            auto_respawn_toggle.on_value_change(on_autorespawn_change)
+            chase_toggle.on_value_change(on_chase_change)
+            active_slider.on_value_change(on_active_change)
+            idle_slider.on_value_change(on_idle_change)
+
+
+def _rename_bot(app: App, client: Client, name: str, refresh_callback: Callable[[], None]) -> None:
+    name = name.strip()
+    if not name:
+        app.notify("Session", "Bot name can't be empty")
+        return
+    if len(name) > 12:
+        app.notify("Session", "Bot name can't be longer than 12 characters")
+        return
+    if any(
+        other.client_data.name == name and other is not client
+        for other in app.clients
+    ):
+        app.notify("Session", "Bot with this name already exists")
+        return
+    if name == client.client_data.name:
+        app.notify("Session", "No changes made")
+        return
+
+    client.client_data.name = name
+    client.settings["player_name"] = name
+    app.notify("Session", f"Renamed bot to {name}")
+    refresh_callback()
+
+
+def _connect_bot(
+    app: App,
+    client: Client,
+    region: str | None,
+    mode: str | None,
+    mayhem: bool,
+    private_search: bool,
+) -> None:
+    if client.is_connected:
+        app.notify("Session", "Bot is already connected")
+        return
+    if not region:
+        app.notify("Session", "Select a region before connecting")
+        return
+
+    selected_mode = GAME_MODE.from_string(mode or GAME_MODE.FFA_ULTRA.name)
+    client.settings["game_mode"] = selected_mode.name
+
+    result = client.connect(
+        region=region,
+        game_mode=selected_mode,
+        connect_in_private_search=private_search,
+        mayhem=mayhem,
+    )
+    if isinstance(result, Exception):
+        app.notify("Connection Error", str(result))
+    else:
+        app.notify("Session", f"Connecting {client.client_data.name}...")
+
+
+def _disconnect_bot(app: App, client: Client) -> None:
+    if not client.is_connected:
+        app.notify("Session", "Bot is not connected")
+        return
+    client.disconnect()
+    app.notify("Session", f"{client.client_data.name} disconnected")
+
+
+def _start_playing(app: App, client: Client) -> None:
+    if not client.is_connected:
+        app.notify("Session", f"{client.client_data.name} is not connected")
+        return
+    client.start_playing()
+    app.notify("Player", f"{client.client_data.name} sent play request")
+
+
+def _copy_ticket(app: App, client: Client) -> None:
+    ticket = client.client_data.login_ticket or ""
+    ui.run_javascript(f"navigator.clipboard.writeText({ticket!r});")
+    app.notify("Info", "Copied bot ticket to clipboard")
+
+
+def _delete_bot(app: App, client: Client, refresh_callback: Callable[[], None]) -> None:
+    try:
+        app.clients.remove(client)
+    except ValueError:
+        app.notify("Session", "Bot already removed")
+        return
+
+    for setting in list(app.states["client_settings"]):
+        if setting["client_uid"] == client.client_data.uid:
+            app.states["client_settings"].remove(setting)
+            break
+
+    app.notify("Session", f"Deleted {client.client_data.name}")
+    refresh_callback()
+
+
+def _disconnect_all(app: App, refresh_callback: Callable[[], None]) -> None:
+    for client in app.clients:
+        if client.is_connected:
             client.disconnect()
-            self.app.notify("Session", f"Killed {client.client_data.name}")
+    app.notify("Session", "Disconnected all bots")
+    refresh_callback()
 
-    def on_disconnect_all_bots(self, e: ft.ControlEvent) -> None:
-        ct: int = len(self.app.clients)
-        self.app.notify("Session", f"Disconnecting {ct} bot(s)...")
+
+def _open_add_bot_dialog(app: App, refresh_callback: Callable[[], None]) -> None:
+    with ui.dialog() as dialog, ui.card().classes("bg-slate-950/80 border border-slate-800/60 p-6 w-[420px]"):
+        ui.label("Add Bot").classes("text-lg font-semibold text-slate-100")
+        ui.label(
+            "Running more than four clients will require proxies or VPN. Max four per IP."
+        ).classes("text-xs text-amber-300")
+        name_input = ui.input(label="Bot Name").classes("w-full")
+        ticket_input = ui.input(label="Bot Ticket", password=True).classes("w-full")
+
+        def confirm() -> None:
+            name = (name_input.value or "").strip()
+            ticket = (ticket_input.value or "").strip()
+            if not name:
+                app.notify("Session", "Bot name can't be empty")
+                return
+            if not ticket:
+                app.notify("Session", "Bot ticket can't be empty")
+                return
+            if any(client.client_data.name == name for client in app.clients):
+                app.notify("Failure", f"Bot named {name} already exists")
+                return
+            if any(client.client_data.login_ticket == ticket for client in app.clients):
+                app.notify("Failure", "Bot with this ticket already exists")
+                return
+            if not ticket.endswith("=") or "," not in ticket:
+                app.notify("Failure", "Invalid ticket format")
+                return
+            account_id = ticket.split(",")[0]
+            if not account_id.isdigit():
+                app.notify("Failure", "Invalid ticket format")
+                return
+
+            dialog.close()
+            client = Client(app, int(account_id), name, ticket)
+            app.clients.append(client)
+            client.setup_loops()
+            app.notify("Session", f"Added {client.client_data.name}")
+            refresh_callback()
+
+        with ui.row().classes("justify-end gap-2 w-full mt-4"):
+            ui.button("Cancel", on_click=dialog.close).classes("bg-slate-800 text-slate-200")
+            ui.button("Add", on_click=confirm).classes("bg-violet-500 hover:bg-violet-400 text-slate-900")
+
+    dialog.open()
+
+
+

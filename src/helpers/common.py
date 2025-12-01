@@ -1,5 +1,6 @@
 from __future__ import annotations
 from binascii import hexlify
+import math
 from random import SystemRandom
 from typing import TYPE_CHECKING
 from game.enums.packet_type import PACKET_TYPE
@@ -52,6 +53,16 @@ def get_packet_class_by_id(i: int) -> type[Packet] | bool:
     return True
 
 
+def distance(x1: float, y1: float, x2: float, y2: float) -> float:
+    return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+
+
+def angle_between_points(x1: float, y1: float, x2: float, y2: float) -> float:
+    delta_x = x2 - x1
+    delta_y = y2 - y1
+    return math.atan2(delta_y, delta_x)
+
+
 def generate_safe_int32() -> int:
     return sysrng.randint(-2147483648, 2147483647)
 
@@ -64,8 +75,3 @@ def value_equals_any_token(client: Client, value: int) -> bool:
         client.client_data.rng_token1,
         client.client_data.rng_token2,
     }
-
-
-def ubyte_to_byte(uint_b: int) -> int:
-    """convert from unsigned to signed byte"""
-    return uint_b - 256 if uint_b > 127 else uint_b

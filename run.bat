@@ -1,1 +1,1 @@
-flet run -d -r src/main.py --name 2oh
+python src\main.py

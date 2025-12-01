@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+  <section class="card p-6 space-y-4">
+    <div class="flex justify-between items-start flex-wrap gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Debug</p>
+        <h1 class="text-2xl font-bold accent-text">WorldDBG</h1>
+        <p class="text-sm text-slate-400">View live world state for connected clients.</p>
+      </div>
+      <div class="flex gap-3 items-center flex-wrap">
+        <label class="toggle">
+          <input class="toggle-input" type="checkbox" id="worlddbg-auto" checked />
+          <span class="toggle-display" aria-hidden="true"></span>
+          <span class="toggle-text">Auto Refresh</span>
+        </label>
+        <button class="btn px-4 py-2" type="button" id="worlddbg-refresh">Refresh</button>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 text-xs text-slate-500 uppercase tracking-[0.2em]">
+      <span>Last Update</span>
+      <span id="worlddbg-updated" class="text-slate-300 normal-case tracking-normal text-sm">Waiting for data...</span>
+    </div>
+    <div id="worlddbg-container" class="space-y-3">
+      <p class="text-slate-500 text-sm">Loading latest world data...</p>
+    </div>
+  </section>
+</main>
+<script>
+  (() => {
+    const endpoint = '/api/worlddbg/state';
+    const container = document.getElementById('worlddbg-container');
+    const updatedLabel = document.getElementById('worlddbg-updated');
+    const autoToggle = document.getElementById('worlddbg-auto');
+    const refreshBtn = document.getElementById('worlddbg-refresh');
+
+    const formatNumber = (value) => {
+      if (value === null || value === undefined) return '-';
+      const num = Number(value);
+      return Number.isNaN(num) ? '-' : num.toFixed(1);
+    };
+
+    const formatName = (value) => {
+      if (value === null || value === undefined) return '';
+      return String(value);
+    };
+
+    const setUpdated = () => {
+      if (!updatedLabel) return;
+      const now = new Date();
+      updatedLabel.textContent = now.toLocaleTimeString();
+    };
+
+    const renderPlayers = (players) => {
+      const wrapper = document.createElement('div');
+      const title = document.createElement('p');
+      title.className = 'text-xs uppercase tracking-[0.2em] text-slate-500';
+      title.textContent = 'Players';
+      wrapper.appendChild(title);
+
+      if (!players || !players.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs text-slate-500';
+        empty.textContent = 'No world data.';
+        wrapper.appendChild(empty);
+        return wrapper;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'space-y-1 text-xs text-slate-200';
+      players
+        .slice()
+        .sort((a, b) => (a.id || 0) - (b.id || 0))
+        .forEach((player) => {
+          const row = document.createElement('div');
+          row.textContent = `${player.id ?? '-'} - ${formatName(player.name)} - mass ${formatNumber(player.mass)} - blobs ${player.blobs ?? '-'} - pos ${formatNumber(player.avg_x)}, ${formatNumber(player.avg_y)}`;
+          list.appendChild(row);
+        });
+      wrapper.appendChild(list);
+      return wrapper;
+    };
+
+    const renderHoles = (holes) => {
+      const wrapper = document.createElement('div');
+      const title = document.createElement('p');
+      title.className = 'text-xs uppercase tracking-[0.2em] text-slate-500';
+      title.textContent = 'Holes';
+      wrapper.appendChild(title);
+
+      if (!holes || !holes.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs text-slate-500';
+        empty.textContent = 'No holes tracked.';
+        wrapper.appendChild(empty);
+        return wrapper;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'space-y-1 text-xs text-slate-200';
+      holes
+        .slice()
+        .sort((a, b) => (a.id || 0) - (b.id || 0))
+        .forEach((hole) => {
+          const row = document.createElement('div');
+          const status = hole.present ? 'present' : 'missing';
+          row.textContent = `${hole.id ?? '-'} - ${formatName(hole.type)} - mass ${formatNumber(hole.mass)} - pos ${formatNumber(hole.x)}, ${formatNumber(hole.y)} (${status})`;
+          list.appendChild(row);
+        });
+      wrapper.appendChild(list);
+      return wrapper;
+    };
+
+    const renderClient = (client) => {
+      const card = document.createElement('div');
+      card.className = 'p-4 rounded-xl border border-slate-700/60 bg-slate-900/60 space-y-3';
+      card.dataset.clientUid = client.uid;
+
+      const header = document.createElement('div');
+      header.className = 'flex justify-between items-center';
+      const title = document.createElement('div');
+      title.className = 'text-slate-100 font-semibold';
+      title.textContent = `${formatName(client.name)} (${client.uid})`;
+      const status = document.createElement('span');
+      status.className = `chip text-xs ${client.is_connected ? '!bg-emerald-500/20' : '!bg-rose-500/20'}`;
+      status.textContent = client.is_connected ? 'Connected' : 'Offline';
+      header.appendChild(title);
+      header.appendChild(status);
+
+      const grids = document.createElement('div');
+      grids.className = 'grid gap-3 md:grid-cols-2';
+      grids.appendChild(renderPlayers(client.players));
+      grids.appendChild(renderHoles(client.holes));
+
+      card.appendChild(header);
+      card.appendChild(grids);
+      return card;
+    };
+
+    const renderWorld = (clients) => {
+      if (!container) return;
+      container.innerHTML = '';
+      if (!clients || !clients.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-slate-500 text-sm';
+        empty.textContent = 'No clients available.';
+        container.appendChild(empty);
+        return;
+      }
+      clients.forEach((client) => {
+        container.appendChild(renderClient(client));
+      });
+    };
+
+    const refresh = async () => {
+      try {
+        const res = await fetch(endpoint, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        renderWorld(data.clients || []);
+        setUpdated();
+      } catch (err) {
+        if (typeof console !== 'undefined') {
+          console.error(err);
+        }
+      }
+    };
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        refresh();
+      });
+    }
+
+    window.addEventListener('ws-message', (event) => {
+      const detail = event.detail;
+      if (!detail || detail.type !== 'world:state') return;
+      if (autoToggle && !autoToggle.checked) return;
+      renderWorld(detail.clients || []);
+      setUpdated();
+    });
+
+    refresh();
+  })();
+</script>
+{% endblock %}

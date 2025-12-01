@@ -1,0 +1,8 @@
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.06), transparent 35%),
+              radial-gradient(circle at 80% 10%, rgba(255,255,255,0.05), transparent 32%);
+  pointer-events: none;
+}
